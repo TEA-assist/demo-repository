@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>03 — AI Pipeline — TEA Demo</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="02-architecture.html">← 02 Architecture</a> · Presentation 03/03 · <a href="../prototype/demo-script.html">Prototype demo script →</a></p>
+<h1>03 — AI Pipeline</h1>
+
+<h2>Hybrid search — seller lists + RAG chat</h2>
+<p><strong>Seller lists</strong> (<code>/stores/my/products?q=</code>) use a shared helper <code>_name_match_and_score(q)</code> in <code>product-graph-api/app/repositories/product_definition.py</code>:</p>
+<pre>WHERE (name ILIKE '%phrase%' ← exact substring, both languages
+       OR per-token trigram: name % 'token')   — both langs
+ORDER BY (exact-phrase bonus 1.0
+          + Σ greatest(similarity(name_en,tok), similarity(name_ar,tok))) DESC</pre>
+<p>Typo-tolerant, multi-word aware: "RAFFIA BRAIDED VISOR" ranks exact name first, then partial-word products. &lt;3 chars → plain substring fallback. Store scope is AND-ed (fixed in this session where it leaked into the OR).</p>
+
+<p><strong>RAG chat</strong> (<code>POST /ws/chat/{id}</code>): pre-flight advisory pings (TTL cache, 2s→6s retries), intent router (greeting/search/general → error), tool-calling parse, filter normalization, hybrid dense+BM25 search in Qdrant (<code>FusionQuery(RRF)</code>, pool ×3 cap 100, thresholds 1024:0.3 / 2560:0.25, size-bonus tier), then streaming frames <code>assistant_start → text_chunk → product_cards → assistant_end</code> (log trace: <code>SEARCH_SIZE_TIER</code>, <code>DIRECT_ANSWER</code>…). Never blocked by pings — real call is arbiter.</p>
+
+<h2>Descriptions &amp; embeddings</h2>
+<ul>
+<li>Descriptions: per-store LLM (OpenCode Zen / OpenRouter), 6 prompt templates, bilingual JSON, history dialog — generated via <code>POST /stores/{id}/products/{pid}/generate-descriptions</code>.</li>
+<li>Embeddings: monolingual passages from minified product JSON (nulls stripped, images→alt_texts), uploaded to Qdrant with filters (<code>_color</code>, <code>_material</code> …) plus <code>text_bm25</code> sparse.</li>
+<li>Search evaluation: golden set <code>scripts/seed_data/search_eval_golden.json</code> (`{"description", "queries": [...]}` — paste the inner <code>queries</code> array into the admin page), metrics MRR@10 / Recall@10 cached 300s, judge dialog auto-runs with <code>limit:20</code>.</li>
+</ul>
+
+<div class="note">Full specs: <code>product-graph-api/docs/embedding-pipeline.md</code>, <code>product-graph-ai-engine/docs/chat-flow.md</code>, <code>demo/user-guides/web-admin.html</code> → Search Evaluation.</div>
+<p class="nav"><a href="../prototype/demo-script.html">Demo script →</a></p>
+</body></html>

@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Shopper (Web) — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Shopper (Web)</p>
+<h1>Shopper — <code>app.asktea.ai</code> &amp; Website Home</h1>
+
+<h2>Anonymous browsing</h2>
+<p><code>app.asktea.ai</code> home is the public <code>(website)</code> group outside the auth guard: hero, <code>AnonymousChatBox</code> (log in prompt → collapsed composer → full-screen Sheet via <code>useCloseOnBack</code>), <code>RandomProductsSection</code> (Swiper slider, 1→3→5 breakpoints, autoplay with visibilitychange pause), <code>ProductViewDialog</code> self-fetching detail. About page at <code>/about</code>.</p>
+
+<h2>Login</h2>
+<ul>
+<li>Phone OTP (OTP autofill badge disabled) or Google Sign-In. Web auth is httpOnly-cookie (<code>credentials: "include"</code> + <code>X-Requested-With: XMLHttpRequest</code>), no Bearer in storage.</li>
+<li>After login, product detail links carry store context; favorites and profile become available.</li>
+</ul>
+
+<h2>Shopping &amp; chat</h2>
+<p>From the home Sheet or <code>/[locale]/admin/product-search</code> when given access, type natural queries ("black evening dress", "running shoes"). Streaming shows <code>text_chunk</code> + <code>product_cards</code>; similar-product chips trigger another <code>similar_request</code> turn. Product cards open the full view with theme-aware <code>ProductGrid</code> (2→4 columns).</p>
+
+<h2>Common issues</h2>
+<ul>
+<li>No results for a shopper list search → seller search is now fuzzy-ranked; if still empty, the seller hasn't created products for that store.</li>
+<li>Language: URL carries locale prefix (<code>/ar</code>, <code>/en</code>). Switch via header language popover.</li>
+</ul>
+
+<div class="note">Full web specs: <code>product-graph-web-ui/docs/</code>.</div>
+</body></html>

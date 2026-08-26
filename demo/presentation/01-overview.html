@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>01 — Overview — TEA Demo</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · Presentation 01/03 — <a href="02-architecture.html">Next → 02 Architecture</a></p>
+<h1>01 — TEA — Overview</h1>
+<p>TEA is an AI product finder for fashion retail — shoppers describe what they want in natural language (English or Arabic) and the system returns ranked product cards with images, prices, and store identity. Sellers manage their catalog and have AI-generated bilingual descriptions; admins curate the catalog, models, prompts, and search quality.</p>
+
+<h2>Problem &amp; value</h2>
+<ul>
+<li>Catalogs are multilingual, attribute-rich, and large (7,000+ products, 67k+ images in the demo). Keyword search fails on synonyms, paraphrases, and typos.</li>
+<li>Writing trilingual descriptions at scale is slow and inconsistent.</li>
+<li>TEA solves both: hybrid search (dense + BM25 sparse vectors fused with RRF, plus pg_trgm trigram similarity for seller lists) and LLM-generated descriptions (en/ar) with prompt-template control.</li>
+</ul>
+
+<h2>Live stack (production)</h2>
+<table><tr><th>Layer</th><th>Technology</th><th>Live URL / image</th></tr>
+<tr><td>Web app</td><td>Next.js 16 App Router, React 19, shadcn/ui, RTK Query</td><td><code>dash.asktea.ai</code> → web-ui:3000 via Caddy</td></tr>
+<tr><td>API</td><td>FastAPI, SQLAlchemy, asyncpg, Redis, RabbitMQ</td><td><code>app.asktea.ai</code> → api:8000 · <code>/api/v1/health</code> exposes git_sha</td></tr>
+<tr><td>AI Engine</td><td>FastAPI, Qdrant, in-process &amp; TEI embeddings</td><td>Internal <code>ai-engine:8003</code> on overlay — no public route</td></tr>
+<tr><td>Mobile</td><td>React Native 0.86, Zustand, TanStack Query, MapLibre</td><td>APKs: <code>TEA-dev.apk</code> / <code>TEA.apk</code> (currently debug-signed)</td></tr>
+<tr><td>Infra</td><td>Single-node Docker Swarm, Caddy 2.11 (DNS-01), Postgres 16, Qdrant v1.19, Redis, RabbitMQ</td><td>Host <code>46.224.211.249</code></td></tr>
+</table>
+
+<h2>Key numbers (this demo)</h2>
+<ul>
+<li>Products 7,682 · Images 67,209 · Embeddings 15,364 vectors @2560 dims (Qwen3-Embedding-4B, product-graph+filters indexed)</li>
+<li>Search evaluation: golden set 166 queries (124 en / 42 ar) — see <a href="../user-guides/web-admin.html">Admin guide → Search Evaluation</a></li>
+</ul>
+
+<h2>Roadmap snapshot</h2>
+<ul>
+<li>Search ranking tuning via metrics (MRR@10 / Recall@10) after full reindex.</li>
+<li>Qdrant + MinIO scheduled backups (see product-graph-api <code>dev-tools/</code>), Loki retention, ENGINE_API_KEY wiring.</li>
+<li>Mobile store build pipeline (production keystore, versioning) — currently documented as manual in demo docs.</li>
+</ul>
+<p class="nav"><a href="02-architecture.html">02 — Architecture →</a></p>
+</body></html>

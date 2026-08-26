@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Mobile — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Mobile</p>
+<h1>Mobile Shopper — React Native 0.86</h1>
+
+<h2>Install</h2>
+<ul>
+<li>Android: CI artifact <code>TEA-dev.apk</code> per flavor (dev/staging/production) from <code>ci.yml</code>'s <code>android-build</code> job (manual, main/staging/develop, branch→flavor). <strong>Today debug-signed</strong> (keystore.properties missing → falls back to debug keystore — see <code>product-graph-mobile-app/docs/release-and-signing.md</code>).</li>
+<li>iOS: scaffold present, no <code>Podfile.lock</code>/workspace committed — run <code>pod install</code> first; Google Sign-In on iOS is blocked until a URL scheme is added.</li>
+</ul>
+
+<h2>Onboarding</h2>
+<ol>
+<li>Open the app → Phone screen (country combobox + local input → <code>{dialCode}{localNumber}</code>) or Continue with Google.</li>
+<li>OTP screen — 6-digit InputOTP; on Android the <em>SMS User Consent</em> native module captures the inbound SMS automatically (hint flicker fix landed in <code>b0d2821</code>; regex matches <code>code|otp|كود|رمز|کد</code> per locale).</li>
+<li>Permissions → Location when-in-use, notifications — grant to enable chat/product features.</li>
+</ol>
+
+<h2>Shopping</h2>
+<ul>
+<li><strong>Home</strong> — product feed via light <code>ProductListItem</code> lists; product tap → <code>ProductViewModal</code> (self-fetching detail via <code>useGetStoreProductQuery</code>, gallery image fallback, favorite toggle).</li>
+<li><strong>Chat drawer</strong> — WS <code>wss://…/ws/chat/{id}?token=JWT</code> with ping/backoff; similar products trigger a new turn with <code>idempotency_key</code>.</li>
+<li><strong>Favorites / Profile</strong> — favorite remove dialog, profile avatar upload via <code>envelope.ts</code> pattern.</li>
+</ul>
+
+<h2>Known gaps</h2>
+<ul>
+<li>No OTA updates, deep linking, or push-notification infra (permission checks only).</li>
+<li>Detox e2e is scaffolding — <code>detox</code> missing from deps, binary paths predate flavors, iOS workspace absent.</li>
+<li>Single patch <code>patches/@maplibre+maplibre-react-native+11.3.6.patch</code> ships with <code>Log.i("TEA-MapTouch")</code> debug logging — scheduled cleanup.</li>
+</ul>
+
+<div class="note">Full specs: <code>product-graph-mobile-app/docs/</code> and live <code>TEA-dev.apk</code> artifact.</div>
+</body></html>

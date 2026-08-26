@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Admin — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Admin</p>
+<h1>Admin — <code>dash.asktea.ai</code></h1>
+<p>Role <code>admin</code> (log in with the prod admin — dev admin restored to production). All pages live under <code>/[locale]/admin/...</code>, locale prefix is <code>always</code> (every URL starts with <code>/en</code> or <code>/ar</code>). i18n: <code>ar</code> default, RTL. Admin view is chosen via sidebar <em>Switch to Seller</em> (persists <code>tea_preferred_view</code>).</p>
+
+<h2>Login</h2>
+<ul>
+<li>Phone → OTP (code valid 10 min, check backend logs for dev code; bypass <code>1234</code> when <code>TWILIO_BYPASS=true</code>), or Google Sign-In (code exchange via redirect_uri, one-time state). On failure, switch view stays on admin — sellers only see 4 nav items.</li>
+<li>Middleware: <code>src/proxy.ts</code> locale negotiation; dashboard layout guards unauthenticated → <code>/login</code>, non-admin on <code>/admin*</code> → <code>/seller</code>.</li>
+</ul>
+
+<h2>Dashboard (<code>/admin</code>)</h2>
+<p>7 gradient tiles: Catalog Data · AI Chat · Cron Jobs · Conversations · LLM · Prompts · System + <strong>Scrapers</strong> (added <code>af0c657</code>).</p>
+
+<h2>Catalog Data (<code>/admin/data</code>)</h2>
+<p>Product type selector → category tree → attribute groups → <code>is_search_affecting</code> chip. Read-only browser; seller products are the live catalog.</p>
+
+<h2>AI Chat (<code>/admin/product-search</code>)</h2>
+<p>RAG search: sidebar conversations (via <code>GET /chats</code>), new chat creates conversation with <code>create_new</code>, WS <code>wss://…/ws/chat/{id}</code> with subprotocol token (no <code>?token=</code>), streaming <code>text_chunk/product_cards</code>, DebugDialog shows trace, similar-product chips. See <code>useChat</code> + <code>useChatSocket</code>.</p>
+
+<h2>Cron Reports (<code>/admin/cron</code> + <code>/llm-product-description</code> + <code>/embeding-product</code>)</h2>
+<p>Status filters (All/Pending/Generated or per-model), detail dialog with prompt + en/ar, Re-index (destructive, AlertDialog confirm), Embedding cron shows per-model detail rows.</p>
+
+<h2>Conversations (<code>/admin/chats</code>)</h2>
+<p>Admin reads user chats + feedback — title + anonymous badge columns (added <code>ffdff26</code>), message history via <code>GET /admin/chats/{id}/messages</code>. No purge endpoint exists.</p>
+
+<h2>Search Evaluation (<code>/admin/search-eval</code>)</h2>
+<p><strong>Generate</strong> (LLM, 1–50, EN/AR checkboxes), <strong>Import</strong> (paste the <em>inner array</em> <code>jq '.queries' scripts/seed_data/search_eval_golden.json</code> — page now tolerates the wrapper object after the search-eval import fix; still prefer the bare array), table (locale/source/status/q + pagination), judge dialog (auto-runs search <code>limit:20</code> → toggle relevant → Save Judgments / Skip), metric cards MRR@10+Recall@10 (overall + EN/AR, cached 300s).</p>
+
+<h2>Settings</h2>
+<ul>
+<li><strong>LLM</strong> (<code>/admin/settings/llm</code>) — provider→model groups, add/delete/toggle API keys (PATCH <code>/:keyId/toggle</code>), set default model (only models with active keys appear as options).</li>
+<li><strong>Prompts</strong> — 6 editors (pre_prompt, ending_prompt, chat_assistant, parse_query, summarize, title).</li>
+<li><strong>System</strong> — toggle <code>product_ai_generation_cron</code>.</li>
+<li><strong>AI Engine</strong> — provider/tunnel config + embedding test card (full vector + copy).</li>
+<li><strong>Scrapers</strong> (<code>/admin/settings/scrapers</code>) — header status badges (error/ready), raw-header textarea draft, Save (PUT), Clear (DELETE) with confirm. Tag <code>ScraperHeaders</code>.</li>
+</ul>
+
+<div class="note">Full spec: <code>product-graph-web-ui/docs/</code> within the web-ui repo, and API's <code>docs/api-reference.md</code> § Admin routes.</div>
+</body></html>

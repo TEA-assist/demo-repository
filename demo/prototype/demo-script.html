@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prototype — Demo Script — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · Prototype</p>
+<h1>Prototype — Live Demo Script</h1>
+<p>Run each journey in order on production (<code>dash.asktea.ai</code> / <code>app.asktea.ai</code>). Admin creds = the dev admin restored to prod. Refresh the dashboard between roles to avoid stale role caches (switch-view persists in <code>tea_preferred_view</code>).</p>
+
+<h2>0 — Smoke check</h2>
+<pre>curl -s https://app.asktea.ai/api/v1/health | jq
+# expect status ok, git_sha e956b09… (fix(search) commit), uptime_seconds small after deploy
+curl -s "https://storage.asktea.ai/minio/health/live"  # 200</pre>
+
+<h2>1 — Admin (5 min)</h2>
+<ol>
+<li>Login as admin on <code>dash.asktea.ai</code> → Dashboard shows 7 tiles (Catalog Data, AI Chat, Cron Jobs, Conversations, LLM, Prompts, System + <strong>Scrapers</strong>).</li>
+<li>Catalog Data → browse product types → categories → attribute groups — point out multi-piece flag.</li>
+<li>AI Chat (<code>/admin/product-search</code>) → send "black evening dress" → show streaming <code>text_chunk</code> + <code>product_cards</code>, debug dialog.</li>
+<li>Search Evaluation → metric cards (MRR@10 / Recall@10, overall + EN/AR). To load data: <code>jq '.queries' ~/Projects/TEA-assist/product-graph-api/scripts/seed_data/search_eval_golden.json | pbcopy</code> → paste bare array into Import → 166 rows.</li>
+<li>Settings: LLM (models with active keys), Prompts (6 editors), AI Engine (embedding provider 4B + vector test), Scrapers (header status badges).</li>
+</ol>
+
+<h2>2 — Store Owner (4 min)</h2>
+<ol>
+<li>Switch View → Seller (or login as seller) → Seller dashboard shows stats (total/active via <code>GET /stores/my/products/stats</code>).</li>
+<li>Stores → create/edit a store (name, phone, hours via WorkingHoursEditor).</li>
+<li>Products → list is light (<code>ProductListItem</code>, 16 fields) — search <code>RAFFIA BRAIDED VISOR</code> → exact name first, then partials (fuzzy ranking live). Open a card → <code>ProductView</code> gallery (color-matched → unlinked fallback).</li>
+<li>Product form: walk BasicInfo → Description (en required) → N attribute groups → PriceInventory (VariantGridEditor, client-side cartesian) → Media (≥3 images, alt_text_en) → Review → Save → redirect to Generate Description.</li>
+<li>Generate Description → pick a model (only models-with-active-keys listed) → Run → preview en/ar → History restore.</li>
+</ol>
+
+<h2>3 — Shopper, web (2 min)</h2>
+<ol>
+<li>Open <code>app.asktea.ai</code> logged-out → home hero + AnonymousChatBox: type "gold ring" → full-screen Sheet → chat → similar-product chips.</li>
+<li>Login via phone OTP (or Google — now baked into prod images after <code>ac5a262</code> CI fix) → favorites appear.</li>
+</ol>
+
+<h2>4 — Shopper, mobile (2 min)</h2>
+<ol>
+<li>Install the flavor APK (<code>TEA-dev.apk</code> from CI artifacts; debug-signed — see repo <code>docs/release-and-signing.md</code>). iOS: pod install → run (iOS scaffold not buildable without <code>Podfile.lock</code>/workspace — note).</li>
+<li>Onboarding: phone → OTP (bypass <code>1234</code> when <code>TWILIO_BYPASS=true</code>) → permissions (location when-in-use, notifications).</li>
+<li>Home → ChatDrawer → similar products → ProductViewModal (RetryingThumbnail) → favorite toggle.</li>
+</ol>
+
+<div class="note">Full guides: <a href="../user-guides/web-admin.html">Admin</a> · <a href="../user-guides/web-store-owner.html">Store Owner</a> · <a href="../user-guides/web-user.html">Shopper (web)</a> · <a href="../user-guides/mobile-app.html">Mobile</a></div>
+</body></html>

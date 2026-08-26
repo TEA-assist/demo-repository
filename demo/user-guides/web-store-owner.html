@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Store Owner — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Store Owner</p>
+<h1>Store Owner — <code>dash.asktea.ai → /seller</code></h1>
+
+<h2>Login &amp; role</h2>
+<p>Phone OTP or Google; admin users switch to Seller via sidebar <em>Switch to Seller</em>. Seller nav has 4 items: Dashboard · Stores · Products · Profile. Store edits exist at <code>/seller/stores/[id]/edit</code> (not a nav entry) and only owners can manage members.</p>
+
+<h2>Stores</h2>
+<ul>
+<li>Create/edit a store: name, description, phone, logo (PhotoUploader, crop), location, hours via <code>WorkingHoursEditor</code>.</li>
+<li>Team: StoreMembersSection — list members with role badges, AddMemberDialog by phone/email (role owner/manager), MemberRow delete — owners can remove non-owner members. APIs: <code>GET /stores/{id}/members</code>, <code>POST/DELETE /stores/{id}/members</code>.</li>
+</ul>
+
+<h2>Products wizard</h2>
+<p>Order (verify in <code>src/components/product/steps/</code>):</p>
+<ol>
+<li><strong>BasicInfo</strong> — names (trilingual), SKU, brand, category</li>
+<li><strong>Description</strong> — <code>short_description_en</code> required (≥20 chars)</li>
+<li><strong>N × Attribute groups</strong> — multi-piece products swap color-pattern for <code>CompositeColorSetsEditor</code> (<code>is_multi_piece</code>, <code>pieces</code>/<code>color_sets</code>, piece_id↔color_option_id validation)</li>
+<li><strong>Price &amp; Inventory</strong> — hosts <code>VariantGridEditor</code> (client-side cartesian in <code>cartesianAttr</code> useMemo)</li>
+<li><strong>Media</strong> — ≥3 images via <code>ProductImageUploader</code>, immediate upload to <code>POST /files/upload</code>, <code>alt_text_en</code> required, crop-and-reupload supported — payload sent inline via <code>lib/product-form.ts buildImagePayload</code></li>
+<li><strong>Review</strong> — validation_rules (required/min_length/… max_select), post-submit redirects to <em>Generate Description</em>.</li>
+</ol>
+<p>Lists show light cards (<code>ProductListItem</code>, 16 fields): <code>GET /stores/my/products</code> (search via <code>?q=</code>, now fuzzy-ranked). Card click → <code>ProductViewDialog → ProductView</code> self-fetches full detail; gallery fallback: color-matched → unlinked → all images.</p>
+
+<h2>Generate Description (<code>/seller/stores/[id]/products/[productId]/generate-description</code>)</h2>
+<p>Model selector shows only models with active API keys, auto-generates on entry, collapsed prompt + <em>Run Edited Prompt</em>, history dialog with restore, retry/skip on error. Results write <code>ai_description_en/ar</code>.</p>
+
+<div class="note">Catalog docs: <code>product-graph-web-ui/docs/product-definition-system.md</code> · API: <code>product-graph-api/docs/product-definition-system.md</code></div>
+</body></html>
