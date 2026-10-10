@@ -1,33 +1,41 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Mobile — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
-<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Mobile</p>
-<h1>Mobile Shopper — React Native 0.86</h1>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Mobile · <a href="../docs/00-full-documentation.html">Full doc</a></p>
+<h1>Shopper Guide (Mobile) — React Native 0.86</h1>
+<p>Native shopper app: browse the feed, chat with AI, view products, manage favorites and profile. Three flavors — <code>dev / staging / production</code> (<code>com.tea.app[.dev]</code>). Backend: <code>API_BASE_URL=https://app-dev.asktea.ai/api/v1</code> via Cloudflare Tunnel.</p>
 
-<h2>Install</h2>
+<h2>1. Install</h2>
 <ul>
-<li>Android: CI artifact <code>TEA-dev.apk</code> per flavor (dev/staging/production) from <code>ci.yml</code>'s <code>android-build</code> job (manual, main/staging/develop, branch→flavor). <strong>Today debug-signed</strong> (keystore.properties missing → falls back to debug keystore — see <code>product-graph-mobile-app/docs/release-and-signing.md</code>).</li>
-<li>iOS: scaffold present, no <code>Podfile.lock</code>/workspace committed — run <code>pod install</code> first; Google Sign-In on iOS is blocked until a URL scheme is added.</li>
+<li><strong>Android</strong>: take the CI artifact <code>TEA-dev.apk</code> for your flavor (job <code>android-build</code> in <code>ci.yml</code>: manual, branch→flavor). <strong>Today's builds are debug-signed</strong> (no <code>keystore.properties</code> → debug keystore fallback — see <code>product-graph-mobile-app/docs/release-and-signing.md</code>). Install on device, accept unknown-source prompt.</li>
+<li><strong>iOS</strong>: scaffold only — run <code>pod install</code> first (no <code>Podfile.lock</code>/workspace committed). Google Sign-In on iOS is blocked until a URL scheme is added.</li>
 </ul>
 
-<h2>Onboarding</h2>
+<h2>2. Onboarding (first run)</h2>
 <ol>
-<li>Open the app → Phone screen (country combobox + local input → <code>{dialCode}{localNumber}</code>) or Continue with Google.</li>
-<li>OTP screen — 6-digit InputOTP; on Android the <em>SMS User Consent</em> native module captures the inbound SMS automatically (hint flicker fix landed in <code>b0d2821</code>; regex matches <code>code|otp|كود|رمز|کد</code> per locale).</li>
-<li>Permissions → Location when-in-use, notifications — grant to enable chat/product features.</li>
+<li>Open the app → <strong>Phone screen</strong>: pick country (combobox) + type local number → submitted as <code>{dialCode}{localNumber}</code>. Or tap <strong>Continue with Google</strong>.</li>
+<li><strong>OTP screen</strong>: enter the 6-digit code (InputOTP). On Android the <em>SMS User Consent</em> native module captures the inbound SMS automatically (hint flicker fixed in <code>b0d2821</code>; regex matches <code>code|otp|كود|رمز|کد</code> per locale). Dev bypass <code>1234</code> when <code>TWILIO_BYPASS=true</code>.</li>
+<li><strong>Permissions</strong>: grant <em>Location when-in-use</em> and <em>Notifications</em> to enable chat/product features.</li>
 </ol>
 
-<h2>Shopping</h2>
+<h2>3. Shopping</h2>
 <ul>
-<li><strong>Home</strong> — product feed via light <code>ProductListItem</code> lists; product tap → <code>ProductViewModal</code> (self-fetching detail via <code>useGetStoreProductQuery</code>, gallery image fallback, favorite toggle).</li>
-<li><strong>Chat drawer</strong> — WS <code>wss://…/ws/chat/{id}?token=JWT</code> with ping/backoff; similar products trigger a new turn with <code>idempotency_key</code>.</li>
-<li><strong>Favorites / Profile</strong> — favorite remove dialog, profile avatar upload via <code>envelope.ts</code> pattern.</li>
+<li><strong>Home feed</strong> — product cards from light <code>ProductListItem</code> lists. Tap a card → <code>ProductViewModal</code> (self-fetching detail via <code>useGetStoreProductQuery</code>, gallery image fallback, <strong>favorite toggle</strong>).</li>
+<li><strong>Chat drawer</strong> — open the drawer, type naturally. Transport <code>wss://…/ws/chat/{id}?token=JWT</code> with ping/backoff and queued frames. Similar products fire a new turn with <code>idempotency_key</code> (safe retry, no duplicates).</li>
+<li><strong>Favorites / Profile</strong> — heart to save, remove dialog to unsave; profile avatar upload uses the <code>envelope.ts</code> pattern (<code>{success,data}</code>).</li>
 </ul>
 
-<h2>Known gaps</h2>
+<h2>4. Language &amp; errors</h2>
+<ul>
+<li>App i18n: <code>react-i18next</code>, locales en/ar/fa. Every label exists in all 3 files; user-facing errors come from the <code>error</code> namespace via <code>showError(error)</code> toasts (never raw English).</li>
+<li>If chat fails: the turn shows retry — tap it (same key). If images fail: <code>RetryingThumbnail</code> re-fetches automatically.</li>
+</ul>
+
+<h2>5. Known gaps (stated honestly for stakeholders)</h2>
 <ul>
 <li>No OTA updates, deep linking, or push-notification infra (permission checks only).</li>
 <li>Detox e2e is scaffolding — <code>detox</code> missing from deps, binary paths predate flavors, iOS workspace absent.</li>
 <li>Single patch <code>patches/@maplibre+maplibre-react-native+11.3.6.patch</code> ships with <code>Log.i("TEA-MapTouch")</code> debug logging — scheduled cleanup.</li>
 </ul>
 
-<div class="note">Full specs: <code>product-graph-mobile-app/docs/</code> and live <code>TEA-dev.apk</code> artifact.</div>
+<div class="note">Full specs: <code>product-graph-mobile-app/docs/</code> + live <code>TEA-dev.apk</code> artifact · Web companion: <a href="web-user.html">Shopper (Web)</a> · Business context: <a href="../docs/00-full-documentation.html">Full Documentation</a>.</div>
+<p class="nav"><a href="../../index.html">Portal</a> · <a href="web-user.html">← Shopper (Web)</a></p>
 </body></html>

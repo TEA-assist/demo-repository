@@ -1,24 +1,43 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Shopper (Web) — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
-<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Shopper (Web)</p>
-<h1>Shopper — <code>app.asktea.ai</code> &amp; Website Home</h1>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Shopper (Web) · <a href="../docs/00-full-documentation.html">Full doc</a></p>
+<h1>Shopper Guide (Web) — <code>app.asktea.ai</code></h1>
+<p>No account needed to start. The public home is outside the auth guard: hero + anonymous AI chat + random-products slider + about page. Login (phone OTP or Google) unlocks favorites and profile.</p>
 
-<h2>Anonymous browsing</h2>
-<p><code>app.asktea.ai</code> home is the public <code>(website)</code> group outside the auth guard: hero, <code>AnonymousChatBox</code> (log in prompt → collapsed composer → full-screen Sheet via <code>useCloseOnBack</code>), <code>RandomProductsSection</code> (Swiper slider, 1→3→5 breakpoints, autoplay with visibilitychange pause), <code>ProductViewDialog</code> self-fetching detail. About page at <code>/about</code>.</p>
+<h2>1. Anonymous browsing (no login)</h2>
+<ol>
+<li>Open <code>https://app.asktea.ai/ar</code> (or <code>/en</code>).</li>
+<li>See the <strong>hero</strong>, then the <strong>chat box</strong> (<code>AnonymousChatBox</code>): collapsed composer → tap to expand → full-screen Sheet (back button closes via <code>useCloseOnBack</code>).</li>
+<li>Type naturally — <code>black evening dress</code>, <code>gold ring</code>, <code>حذاء رياضي</code>. The assistant streams text + <strong>product cards</strong>. Session is ephemeral (10-min WS-only token, no account).</li>
+<li>Browse the <strong>Random Products slider</strong> (<code>RandomProductsSection</code>: Swiper 1→3→5 columns by breakpoint, autoplay pauses when tab hidden). Click any card → <code>ProductViewDialog</code> fetches full detail.</li>
+<li>Visit <code>/about</code> for the store story.</li>
+</ol>
 
-<h2>Login</h2>
-<ul>
-<li>Phone OTP (OTP autofill badge disabled) or Google Sign-In. Web auth is httpOnly-cookie (<code>credentials: "include"</code> + <code>X-Requested-With: XMLHttpRequest</code>), no Bearer in storage.</li>
-<li>After login, product detail links carry store context; favorites and profile become available.</li>
-</ul>
+<h2>2. Login</h2>
+<ol>
+<li>Tap <strong>Login</strong> → <strong>Phone OTP</strong> (6 digits) or <strong>Google Sign-In</strong>.</li>
+<li>Web auth is <strong>httpOnly-cookie</strong> (<code>credentials: "include"</code> + <code>X-Requested-With: XMLHttpRequest</code>) — no Bearer token in storage. Refresh is automatic; failure logs you out.</li>
+<li>After login, product links carry store context, and <strong>Favorites + Profile</strong> appear in nav.</li>
+</ol>
 
-<h2>Shopping &amp; chat</h2>
-<p>From the home Sheet or <code>/[locale]/admin/product-search</code> when given access, type natural queries ("black evening dress", "running shoes"). Streaming shows <code>text_chunk</code> + <code>product_cards</code>; similar-product chips trigger another <code>similar_request</code> turn. Product cards open the full view with theme-aware <code>ProductGrid</code> (2→4 columns).</p>
+<h2>3. Shopping with AI chat</h2>
+<ol>
+<li>From the home Sheet (or <code>/[locale]/admin/product-search</code> if staff), type what you want in your own words.</li>
+<li>Streaming shows <code>text_chunk</code> + <code>product_cards</code>. Cards open the full view (<code>ProductGrid</code> 2→4 columns, theme-aware).</li>
+<li>Tap a <strong>similar-product chip</strong> to fire a <code>similar_request</code> turn ("find more like this").</li>
+<li>Tap the <strong>heart</strong> on any product to favorite it (login required).</li>
+</ol>
 
-<h2>Common issues</h2>
-<ul>
-<li>No results for a shopper list search → seller search is now fuzzy-ranked; if still empty, the seller hasn't created products for that store.</li>
-<li>Language: URL carries locale prefix (<code>/ar</code>, <code>/en</code>). Switch via header language popover.</li>
-</ul>
+<h2>4. Language</h2>
+<p>Every URL carries a locale prefix (<code>/ar</code>, <code>/en</code>). Switch via the header language popover. Arabic is default with full RTL; search works in both languages including typos.</p>
 
-<div class="note">Full web specs: <code>product-graph-web-ui/docs/</code>.</div>
+<h2>5. Common issues</h2>
+<table><tr><th>Symptom</th><th>What to do</th></tr>
+<tr><td>No results for a search</td><td>Rephrase (seller search is fuzzy-ranked; if still empty the seller hasn't added products for that store)</td></tr>
+<tr><td>Chat looks stuck</td><td>Retry the turn (same idempotency key — no duplicate) or open a new chat</td></tr>
+<tr><td>Favorites missing</td><td>Log in — anonymous sessions don't keep favorites</td></tr>
+<tr><td>Wrong language</td><td>Header popover → pick AR/EN (URL prefix changes)</td></tr>
+</table>
+
+<div class="note">Full web specs: <code>product-graph-web-ui/docs/</code> · Mobile companion: <a href="mobile-app.html">Shopper (Mobile) →</a> · Business context: <a href="../docs/00-full-documentation.html">Full Documentation</a>.</div>
+<p class="nav"><a href="../../index.html">Portal</a> · <a href="web-store-owner.html">← Store Owner</a> · <a href="mobile-app.html">Next: Shopper (Mobile) →</a></p>
 </body></html>

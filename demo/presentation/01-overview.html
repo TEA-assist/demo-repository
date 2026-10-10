@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>01 — Overview — TEA Demo</title><link rel="stylesheet" href="../assets/style.css"></head><body>
-<p class="nav"><a href="../../index.html">Portal</a> · Presentation 01/03 — <a href="02-architecture.html">Next → 02 Architecture</a></p>
+<p class="nav"><a href="../../index.html">Portal</a> · <a href="00-executive-summary.html">← 00 Summary</a> · Presentation 01/05 — <a href="02-architecture.html">Next → 02 Architecture</a></p>
 <h1>01 — TEA — Overview</h1>
 <p>TEA is an AI product finder for fashion retail — shoppers describe what they want in natural language (English or Arabic) and the system returns ranked product cards with images, prices, and store identity. Sellers manage their catalog and have AI-generated bilingual descriptions; admins curate the catalog, models, prompts, and search quality.</p>
 
@@ -12,7 +12,7 @@
 
 <h2>Live stack (production)</h2>
 <table><tr><th>Layer</th><th>Technology</th><th>Live URL / image</th></tr>
-<tr><td>Web app</td><td>Next.js 16 App Router, React 19, shadcn/ui, RTK Query</td><td><code>dash.asktea.ai</code> → web-ui:3000 via Caddy</td></tr>
+<tr><td>Web app</td><td>Next.js 16 App Router, React 19, shadcn/ui, RTK Query</td><td><code>asktea.ai</code> → web-ui:3000 via Caddy</td></tr>
 <tr><td>API</td><td>FastAPI, SQLAlchemy, asyncpg, Redis, RabbitMQ</td><td><code>app.asktea.ai</code> → api:8000 · <code>/api/v1/health</code> exposes git_sha</td></tr>
 <tr><td>AI Engine</td><td>FastAPI, Qdrant, in-process &amp; TEI embeddings</td><td>Internal <code>ai-engine:8003</code> on overlay — no public route</td></tr>
 <tr><td>Mobile</td><td>React Native 0.86, Zustand, TanStack Query, MapLibre</td><td>APKs: <code>TEA-dev.apk</code> / <code>TEA.apk</code> (currently debug-signed)</td></tr>
@@ -31,5 +31,5 @@
 <li>Qdrant + MinIO scheduled backups (see product-graph-api <code>dev-tools/</code>), Loki retention, ENGINE_API_KEY wiring.</li>
 <li>Mobile store build pipeline (production keystore, versioning) — currently documented as manual in demo docs.</li>
 </ul>
-<p class="nav"><a href="02-architecture.html">02 — Architecture →</a></p>
+<p class="nav"><a href="00-executive-summary.html">← Summary</a> · <a href="02-architecture.html">02 — Architecture →</a> · <a href="../docs/00-full-documentation.html">Full Documentation</a></p>
 </body></html>

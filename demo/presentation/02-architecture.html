@@ -1,12 +1,12 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>02 — Architecture — TEA Demo</title><link rel="stylesheet" href="../assets/style.css"></head><body>
-<p class="nav"><a href="01-overview.html">← 01 Overview</a> · Presentation 02/03 · <a href="03-ai-pipeline.html">Next → 03 AI Pipeline</a></p>
+<p class="nav"><a href="01-overview.html">← 01 Overview</a> · Presentation 02/05 · <a href="03-ai-pipeline.html">Next → 03 AI Pipeline</a></p>
 <h1>02 — Architecture</h1>
 
 <h2>Single-node Swarm, 11 Caddy routes</h2>
 <p><code>product-graph-infra</code> owns the Swarm definition: 5 stacks sharing overlay <code>tea-infra-net</code>.</p>
 <table><tr><th>Domain</th><th>Target</th><th>Auth</th></tr>
 <tr><td><code>app.asktea.ai</code></td><td>api:8000</td><td>App/API keys + JWT</td></tr>
-<tr><td><code>dash.asktea.ai</code></td><td>web-ui:3000</td><td>JWT (httpOnly cookie) + X-Requested-With</td></tr>
+<tr><td><code>asktea.ai</code></td><td>web-ui:3000</td><td>JWT (httpOnly cookie) + X-Requested-With</td></tr>
 <tr><td><code>grafana.asktea.ai</code></td><td>grafana:3000</td><td>GRAFANA_ADMIN_PASSWORD</td></tr>
 <tr><td><code>loki.asktea.ai</code></td><td>loki:3100</td><td>⚠️ none (internet-reachable)</td></tr>
 <tr><td><code>pg.asktea.ai</code></td><td>pgadmin:80</td><td>PGADMIN_EMAIL/PASSWORD</td></tr>

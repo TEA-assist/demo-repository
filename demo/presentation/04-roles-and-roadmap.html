@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>04 — Roles &amp; Roadmap — TEA Demo</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="03-ai-pipeline.html">← 03 AI Pipeline</a> · Presentation 04/05 · <a href="05-investor-business-model.html">05 Investor →</a> · <a href="../prototype/demo-script.html">Prototype demo script →</a></p>
+<h1>04 — Roles &amp; Roadmap</h1>
+
+<h2>Three roles, three journeys (4 + 5 + 2 + 2 min)</h2>
+<table><tr><th>Role</th><th>Where</th><th>60-second story</th><th>Guide</th></tr>
+<tr><td><strong>Admin</strong></td><td><code>asktea.ai/admin</code></td><td>8 tiles → AI Chat "black evening dress" (streaming cards + debug) → Search Eval (166 queries, MRR@10/Recall@10) → LLM keys / 6 prompts / cron / scrapers</td><td><a href="../user-guides/web-admin.html">Admin Guide</a></td></tr>
+<tr><td><strong>Store Owner</strong></td><td><code>asktea.ai/seller</code></td><td>Dashboard stats → Stores (create + team by phone/email) → Products (fuzzy <code>RAFFIA BRAIDED VISOR</code>) → 6-step wizard → Generate Description (en/ar + history)</td><td><a href="../user-guides/web-store-owner.html">Seller Guide</a></td></tr>
+<tr><td><strong>Shopper (web)</strong></td><td><code>app.asktea.ai</code></td><td>Anonymous chat "gold ring" → Sheet → similar chips → OTP/Google login → favorites</td><td><a href="../user-guides/web-user.html">Web Guide</a></td></tr>
+<tr><td><strong>Shopper (mobile)</strong></td><td><code>TEA-dev.apk</code></td><td>Phone → OTP autofill → permissions → feed → chat drawer → product modal → favorite</td><td><a href="../user-guides/mobile-app.html">Mobile Guide</a></td></tr>
+</table>
+
+<h2>KPIs to quote</h2>
+<ul>
+<li>Catalog: <strong>7,682 products · 67,209 images · 15,364 vectors @2560 dims</strong> (per-language Qwen3-Embedding-4B points).</li>
+<li>Quality: <strong>166-query golden set (124 EN / 42 AR)</strong>, judged at <code>limit:20</code>, measured <strong>MRR@10 / Recall@10</strong> overall + per-locale.</li>
+<li>Experience: anonymous-to-favorite in under 2 minutes; seller product-to-AI-description in one wizard.</li>
+<li>Reliability: <code>/health</code> exposes <code>git_sha</code> + uptime; Grafana/Loki observability; serialized Swarm deploys.</li>
+</ul>
+
+<h2>Roadmap (honest, grouped)</h2>
+<ul>
+<li><strong>Search tuning</strong>: adjust thresholds (1024:0.3 / 2560:0.25) and size-bonus tier from eval metrics after full reindex.</li>
+<li><strong>Operations</strong>: Qdrant + MinIO scheduled backups, Loki retention, <code>ENGINE_API_KEY</code> wiring, Loki/Qdrant exposure hardening.</li>
+<li><strong>Mobile maturity</strong>: production keystore + versioning pipeline (debug-signed today), iOS URL scheme for Google Sign-In, OTA/deep-link/push evaluation, Detox repair.</li>
+<li><strong>Catalog growth</strong>: scraper header workflow already in admin; category/color/attribute mapping docs in <code>SCRAPER_MAPPING.md</code>.</li>
+</ul>
+
+<h2>Call to action</h2>
+<ol>
+<li>Run the <a href="../prototype/demo-script.html">live demo script</a> now (smoke check first).</li>
+<li>Hand stakeholders the <a href="../docs/00-full-documentation.html">Full Documentation</a> + role guides.</li>
+<li>Agree the next tuning cycle: import golden set → judge → read MRR@10/Recall@10 → tune.</li>
+</ol>
+
+<div class="note">All pages are plain HTML under <code>demo/</code> — open directly or via the <a href="../../index.html">portal</a>. Screenshots: <code>demo/assets/screenshots/</code>.</div>
+<p class="nav"><a href="03-ai-pipeline.html">← AI Pipeline</a> · <a href="../../index.html">Portal</a> · <a href="05-investor-business-model.html">05 — Investor →</a> · <a href="../prototype/demo-script.html">Demo script →</a></p>
+</body></html>

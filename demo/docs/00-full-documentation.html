@@ -1,0 +1,71 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Full Documentation — TEA AI Product Finder</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · Full Documentation</p>
+<h1>TEA — AI Product Finder — Full Documentation</h1>
+<p>Single entry point for the whole platform. Live stack runs on <code>asktea.ai</code>: App <code>https://app.asktea.ai</code> · Dashboard <code>https://asktea.ai</code> · Health <code>https://app.asktea.ai/api/v1/health</code>. This page is the business-friendly master doc — it links to the deep technical manual and the three role-separated user guides.</p>
+
+<h2>What TEA is</h2>
+<p>TEA is an AI product finder for fashion retail. Shoppers describe what they want in natural language — English or Arabic, with typos, synonyms and paraphrases — and TEA returns ranked product cards with images, prices and store identity. Sellers manage stores and catalogs and get bilingual AI descriptions in one click. Admins curate the catalog, AI models, prompts and search quality.</p>
+<ul>
+<li><strong>For shoppers:</strong> no keyword gymnastics. Type "black evening dress" or "فستان سهرة أسود" and get relevant results, similar-product suggestions and a conversational assistant.</li>
+<li><strong>For store owners:</strong> create a store, add products with a guided wizard (names, attributes, variants, ≥3 images), then generate professional English + Arabic descriptions with one click.</li>
+<li><strong>For admins:</strong> full control — catalog data, AI chat, cron reports, conversations, LLM keys, 6 prompt templates, embedding status, search-evaluation metrics (MRR@10 / Recall@10), scraper headers.</li>
+</ul>
+
+<h2>Live numbers (this release)</h2>
+<table><tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Products</td><td>7,682 <code>store_products</code></td></tr>
+<tr><td>Images</td><td>67,209</td></tr>
+<tr><td>Embeddings</td><td>15,364 vectors @2560 dims (Qwen3-Embedding-4B, per-language points)</td></tr>
+<tr><td>Search golden set</td><td>166 queries (124 EN / 42 AR)</td></tr>
+<tr><td>Languages</td><td>English + Arabic UI and search (Farsi in web UI i18n)</td></tr>
+<tr><td>Platforms</td><td>Web app (Next.js 16) · Dashboard · API (FastAPI) · AI Engine · Mobile (React Native 0.86)</td></tr>
+</table>
+
+<h2>Document map — read in this order</h2>
+<table><tr><th>#</th><th>Document</th><th>Audience</th><th>What you learn</th></tr>
+<tr><td>0</td><td>This page</td><td>Everyone</td><td>Overview + where to go next</td></tr>
+<tr><td>1</td><td><a href="01-technical-manual.html">Technical Manual</a></td><td>Technical / decision makers</td><td>Stack, architecture, data plane, API, AI pipeline, infra, CI/CD, security</td></tr>
+<tr><td>2</td><td><a href="../user-guides/web-admin.html">Admin Guide</a></td><td>Admins</td><td>Dashboard, catalog data, AI chat, cron, conversations, search eval, LLM / prompts / system / AI engine / scrapers</td></tr>
+<tr><td>3</td><td><a href="../user-guides/web-store-owner.html">Store Owner Guide</a></td><td>Sellers</td><td>Stores, team members, product wizard (6 steps), fuzzy search, AI description generation</td></tr>
+<tr><td>4</td><td><a href="../user-guides/web-user.html">Shopper Guide (Web)</a> + <a href="../user-guides/mobile-app.html">Shopper Guide (Mobile)</a></td><td>Shoppers / support</td><td>Anonymous chat, login (OTP + Google), favorites, mobile onboarding, chat drawer, product view</td></tr>
+<tr><td>5</td><td><a href="../prototype/demo-script.html">Live Demo Script</a></td><td>Presenters</td><td>4 click-paths in order: smoke check → admin → seller → shopper web → shopper mobile</td></tr>
+<tr><td>6</td><td><a href="../presentation/00-executive-summary.html">Presentation</a> (00–04)</td><td>Stakeholders</td><td>Slide deck: summary → overview → architecture → AI pipeline → roles &amp; roadmap</td></tr>
+</table>
+
+<h2>System at a glance</h2>
+<table><tr><th>Layer</th><th>Technology</th><th>Live endpoint</th></tr>
+<tr><td>Web app + Dashboard</td><td>Next.js 16 App Router, React 19, shadcn/ui, RTK Query, next-intl (ar/en/fa, RTL)</td><td><code>asktea.ai</code> → web-ui:3000</td></tr>
+<tr><td>API</td><td>FastAPI, SQLAlchemy async, Postgres 16, Redis, RabbitMQ, MinIO</td><td><code>app.asktea.ai</code> → api:8000</td></tr>
+<tr><td>AI Engine</td><td>FastAPI, Qdrant v1.19, Qwen3-Embedding-4B, DeepSeek V4 Flash</td><td>Internal <code>ai-engine:8003</code> (no public route)</td></tr>
+<tr><td>Mobile</td><td>React Native 0.86, Zustand, TanStack Query, MapLibre</td><td><code>TEA-dev.apk</code> per flavor (debug-signed today)</td></tr>
+<tr><td>Infra</td><td>Single-node Docker Swarm, Caddy 2.11 (DNS-01), Grafana/Loki/Promtail, Portainer</td><td>Host <code>46.224.211.249</code>, 11 Caddy routes</td></tr>
+</table>
+
+<h2>Role summary (one paragraph each)</h2>
+<h3>Admin</h3>
+<p>Logs in on <code>asktea.ai</code> with the admin account. Sees 8 dashboard tiles (Catalog Data, AI Chat, Cron Jobs, Conversations, LLM, Prompts, System, Scrapers). Browses the catalog taxonomy read-only, tests RAG chat with streaming product cards and a debug dialog, reviews AI-description and embedding cron reports (including destructive re-index with confirm), reads user conversations and feedback, generates/imports/judges search-eval queries and reads MRR@10/Recall@10 cards, manages LLM models and encrypted API keys, edits 6 prompt templates, toggles the description cron, tests embeddings, and pastes scraper headers. Full steps: <a href="../user-guides/web-admin.html">Admin Guide →</a></p>
+<h3>Store Owner</h3>
+<p>Logs in (or admin uses Switch to Seller) and sees 4 nav items: Dashboard, Stores, Products, Profile. Creates/edits stores (name, phone, logo with crop, location, working hours), manages team members by phone/email with owner/manager roles, adds products through a 6-step wizard ending in AI description generation, and searches the product list with typo-tolerant fuzzy ranking. Full steps: <a href="../user-guides/web-store-owner.html">Store Owner Guide →</a></p>
+<h3>Shopper (web + mobile)</h3>
+<p>No account needed to start: the public home has a hero, an anonymous chat box (ephemeral 10-minute session) and a random-products slider. Login via phone OTP or Google unlocks favorites and profile. On mobile: install the flavor APK, verify OTP (SMS autofill on Android), grant location/notifications, then browse the feed, open the chat drawer, view products and toggle favorites. Full steps: <a href="../user-guides/web-user.html">Shopper (Web) →</a> · <a href="../user-guides/mobile-app.html">Shopper (Mobile) →</a></p>
+
+<h2>How search and AI work (plain language)</h2>
+<ul>
+<li><strong>Seller list search</strong> is typo-tolerant: exact-phrase matches rank first, then per-token trigram similarity across English and Arabic names. Under 3 characters it falls back to plain substring.</li>
+<li><strong>Shopper chat search</strong> is hybrid RAG: the query is embedded (dense vector) and tokenized (BM25 sparse vector), fused with RRF in Qdrant, filtered by color/material/category/brand/gender/size, then answered by the conversational LLM with streaming frames (<code>assistant_start → text_chunk → product_cards → assistant_end</code>).</li>
+<li><strong>Descriptions</strong> are LLM-generated bilingual JSON (en/ar) from 6 controllable prompt templates, with version history and restore.</li>
+<li><strong>Quality</strong> is measured on a 166-query golden set with MRR@10 and Recall@10 (overall + EN/AR), judged in the admin panel with <code>limit:20</code> searches.</li>
+<li>Deep dive: <a href="01-technical-manual.html">Technical Manual § AI pipeline</a> and <a href="../presentation/03-ai-pipeline.html">Presentation 03</a>.</li>
+</ul>
+
+<h2>Security &amp; operations (stakeholder summary)</h2>
+<ul>
+<li>Auth: phone OTP (10-min code) + Google Sign-In; web uses httpOnly cookies + CSRF, mobile uses Bearer tokens; refresh rotation with reuse detection; RBAC admin/seller.</li>
+<li>Infra: 5 Swarm stacks on one overlay network; Caddy TLS via Cloudflare DNS-01; Postgres/Redis/RabbitMQ/MinIO/Qdrant; Grafana/Loki monitoring.</li>
+<li>Known hardening note: <code>loki:3100</code> has no auth and <code>qdrant:6333</code> is host-published — remediation options are documented in the technical manual.</li>
+<li>CI/CD: all repos build on self-hosted <code>[self-hosted, tea-server]</code> runners with quality gates → build → migrate → serialized Swarm deploy; <code>/health</code> exposes <code>git_sha</code> for demo verification.</li>
+</ul>
+
+<div class="note">Start the live demo with the <a href="../prototype/demo-script.html">Demo Script</a> (smoke check first), or present with the <a href="../presentation/00-executive-summary.html">slide deck</a>.</div>
+<p class="nav"><a href="../../index.html">Portal</a> · <a href="01-technical-manual.html">Technical Manual →</a></p>
+</body></html>

@@ -1,40 +1,75 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Admin — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
-<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Admin</p>
-<h1>Admin — <code>dash.asktea.ai</code></h1>
-<p>Role <code>admin</code> (log in with the prod admin — dev admin restored to production). All pages live under <code>/[locale]/admin/...</code>, locale prefix is <code>always</code> (every URL starts with <code>/en</code> or <code>/ar</code>). i18n: <code>ar</code> default, RTL. Admin view is chosen via sidebar <em>Switch to Seller</em> (persists <code>tea_preferred_view</code>).</p>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Admin · <a href="../docs/00-full-documentation.html">Full doc</a></p>
+<h1>Admin Guide — <code>asktea.ai</code></h1>
+<p>Role <code>admin</code>. Log in with the production admin account (dev admin restored to production). All pages live under <code>/[locale]/admin/...</code> — every URL starts with <code>/en</code> or <code>/ar</code> (locale prefix <code>always</code>, default <code>ar</code> with RTL). Switch between Admin and Seller views with the sidebar <em>Switch to Seller</em> button (persists <code>tea_preferred_view</code> — refresh the dashboard between roles to avoid stale caches).</p>
 
-<h2>Login</h2>
+<h2>1. Login</h2>
+<ol>
+<li>Open <code>https://asktea.ai/ar/login</code> (or <code>/en/login</code>).</li>
+<li>Choose <strong>Phone → OTP</strong> (enter phone with country code, receive 6-digit code valid 10 min; dev bypass <code>1234</code> only when <code>TWILIO_BYPASS=true</code>) or <strong>Google Sign-In</strong> (code exchange via redirect_uri, one-time state).</li>
+<li>On success you land on <code>/[locale]/admin</code>. If login fails you stay on admin — sellers only ever see 4 nav items, admins see 11.</li>
+</ol>
+<p>Guards: <code>src/proxy.ts</code> negotiates locale; dashboard layout sends unauthenticated users to <code>/login</code> and non-admins on <code>/admin*</code> to <code>/seller</code>.</p>
+
+<h2>2. Dashboard (<code>/admin</code>)</h2>
+<p>8 gradient tiles: <strong>Catalog Data · AI Chat · Cron Jobs · Conversations · LLM · Prompts · System · Scrapers</strong>. Each tile is a doorway to the sections below — start any admin tour here.</p>
+
+<h2>3. Catalog Data (<code>/admin/data</code>)</h2>
+<ol>
+<li>Pick a <strong>product type</strong> from the selector (e.g. Fashion).</li>
+<li>Expand the <strong>category tree</strong>, then open <strong>attribute groups</strong>.</li>
+<li>Look for the <code>is_search_affecting</code> chip — those attributes are written into the AI embedding text, which is what makes "neckline", "sleeve", "occasion" etc. searchable without extra code.</li>
+</ol>
+<p>Read-only browser. The live sellable catalog is the sellers' products.</p>
+
+<h2>4. AI Chat (<code>/admin/product-search</code>)</h2>
+<ol>
+<li>Sidebar lists conversations (<code>GET /chats</code>). Click <strong>New chat</strong> (creates a conversation with <code>create_new</code>).</li>
+<li>Type a natural query — e.g. <code>black evening dress</code> or <code>فستان سهرة أسود</code> — and send.</li>
+<li>Watch streaming: <code>text_chunk</code> bubbles + <code>product_cards</code> grid. Open any card for the full product dialog.</li>
+<li>Click <strong>Debug</strong> on an assistant message to inspect the trace (rewritten query, filters, tool used, fallback path).</li>
+<li>Use <strong>similar-product chips</strong> to fire a <code>similar_request</code> follow-up turn.</li>
+</ol>
+<p>Transport: <code>wss://…/ws/chat/{id}</code> with the token as subprotocol (no <code>?token=</code>). Logic: <code>useChat</code> + <code>useChatSocket</code>.</p>
+
+<h2>5. Cron Reports (<code>/admin/cron</code>, <code>/llm-product-description</code>, <code>/embeding-product</code>)</h2>
 <ul>
-<li>Phone → OTP (code valid 10 min, check backend logs for dev code; bypass <code>1234</code> when <code>TWILIO_BYPASS=true</code>), or Google Sign-In (code exchange via redirect_uri, one-time state). On failure, switch view stays on admin — sellers only see 4 nav items.</li>
-<li>Middleware: <code>src/proxy.ts</code> locale negotiation; dashboard layout guards unauthenticated → <code>/login</code>, non-admin on <code>/admin*</code> → <code>/seller</code>.</li>
+<li><strong>Description cron</strong>: filter All / Pending / Generated, open a row for prompt + en/ar text + model + timestamp. Re-index button is destructive — confirm in the AlertDialog.</li>
+<li><strong>Embedding cron</strong>: per-model detail rows (<code>embedding_status</code> + model filters, active-model banner). Shows each product's per-model rows and embed-text preview.</li>
 </ul>
 
-<h2>Dashboard (<code>/admin</code>)</h2>
-<p>7 gradient tiles: Catalog Data · AI Chat · Cron Jobs · Conversations · LLM · Prompts · System + <strong>Scrapers</strong> (added <code>af0c657</code>).</p>
+<h2>6. Conversations (<code>/admin/chats</code>)</h2>
+<p>Read shoppers' chats + feedback. Columns include title + anonymous badge. Open a row for full message history (<code>GET /admin/chats/{id}/messages</code>) with ratings. There is no purge endpoint — history is retained.</p>
 
-<h2>Catalog Data (<code>/admin/data</code>)</h2>
-<p>Product type selector → category tree → attribute groups → <code>is_search_affecting</code> chip. Read-only browser; seller products are the live catalog.</p>
+<h2>7. Search Evaluation (<code>/admin/search-eval</code>) — the quality lab</h2>
+<ol>
+<li><strong>Generate</strong>: ask the LLM for 1–50 fresh queries (EN/AR checkboxes). They arrive as <code>pending</code> rows.</li>
+<li><strong>Import</strong>: paste the <em>inner array</em> — <code>jq '.queries' ~/Projects/TEA-assist/product-graph-api/scripts/seed_data/search_eval_golden.json | pbcopy</code> — into Import. The page tolerates the wrapper object too, but the bare array is preferred. Expect 166 rows (124 EN / 42 AR).</li>
+<li><strong>Judge</strong>: open a query → dialog auto-runs search with <code>limit:20</code> → toggle relevant results → <strong>Save Judgments</strong> (or Skip).</li>
+<li><strong>Read metrics</strong>: cards show MRR@10 + Recall@10 overall and per-locale EN/AR (cached 300s).</li>
+</ol>
 
-<h2>AI Chat (<code>/admin/product-search</code>)</h2>
-<p>RAG search: sidebar conversations (via <code>GET /chats</code>), new chat creates conversation with <code>create_new</code>, WS <code>wss://…/ws/chat/{id}</code> with subprotocol token (no <code>?token=</code>), streaming <code>text_chunk/product_cards</code>, DebugDialog shows trace, similar-product chips. See <code>useChat</code> + <code>useChatSocket</code>.</p>
-
-<h2>Cron Reports (<code>/admin/cron</code> + <code>/llm-product-description</code> + <code>/embeding-product</code>)</h2>
-<p>Status filters (All/Pending/Generated or per-model), detail dialog with prompt + en/ar, Re-index (destructive, AlertDialog confirm), Embedding cron shows per-model detail rows.</p>
-
-<h2>Conversations (<code>/admin/chats</code>)</h2>
-<p>Admin reads user chats + feedback — title + anonymous badge columns (added <code>ffdff26</code>), message history via <code>GET /admin/chats/{id}/messages</code>. No purge endpoint exists.</p>
-
-<h2>Search Evaluation (<code>/admin/search-eval</code>)</h2>
-<p><strong>Generate</strong> (LLM, 1–50, EN/AR checkboxes), <strong>Import</strong> (paste the <em>inner array</em> <code>jq '.queries' scripts/seed_data/search_eval_golden.json</code> — page now tolerates the wrapper object after the search-eval import fix; still prefer the bare array), table (locale/source/status/q + pagination), judge dialog (auto-runs search <code>limit:20</code> → toggle relevant → Save Judgments / Skip), metric cards MRR@10+Recall@10 (overall + EN/AR, cached 300s).</p>
-
-<h2>Settings</h2>
+<h2>8. Settings</h2>
 <ul>
-<li><strong>LLM</strong> (<code>/admin/settings/llm</code>) — provider→model groups, add/delete/toggle API keys (PATCH <code>/:keyId/toggle</code>), set default model (only models with active keys appear as options).</li>
-<li><strong>Prompts</strong> — 6 editors (pre_prompt, ending_prompt, chat_assistant, parse_query, summarize, title).</li>
-<li><strong>System</strong> — toggle <code>product_ai_generation_cron</code>.</li>
-<li><strong>AI Engine</strong> — provider/tunnel config + embedding test card (full vector + copy).</li>
-<li><strong>Scrapers</strong> (<code>/admin/settings/scrapers</code>) — header status badges (error/ready), raw-header textarea draft, Save (PUT), Clear (DELETE) with confirm. Tag <code>ScraperHeaders</code>.</li>
+<li><strong>LLM</strong> (<code>/admin/settings/llm</code>): provider→model groups. Add / delete / toggle API keys (<code>PATCH /:keyId/toggle</code>), set the default model. Only models with active keys appear as options elsewhere.</li>
+<li><strong>Prompts</strong>: 6 editors — <code>pre_prompt, ending_prompt, chat_assistant, parse_query, summarize, title</code>. Single save.</li>
+<li><strong>System</strong>: toggle <code>product_ai_generation_cron</code> on/off.</li>
+<li><strong>AI Engine</strong>: provider/tunnel config + embedding test card (paste 1–1000 chars → full vector + copy button).</li>
+<li><strong>Scrapers</strong> (<code>/admin/settings/scrapers</code>): per-scraper status badges (error/ready), raw-header textarea draft, Save (PUT) / Clear (DELETE) with confirm. Tag <code>ScraperHeaders</code>.</li>
+<li><strong>Twilio/SMS</strong> (<code>/admin/settings/twilio</code>): connection card (masked SID, write-only token) + OTP whitelist table.</li>
 </ul>
 
-<div class="note">Full spec: <code>product-graph-web-ui/docs/</code> within the web-ui repo, and API's <code>docs/api-reference.md</code> § Admin routes.</div>
+<h2>9. Common tasks (cheat sheet)</h2>
+<table><tr><th>I want to…</th><th>Go to…</th></tr>
+<tr><td>Test search quality</td><td>AI Chat → send query → Debug dialog</td></tr>
+<tr><td>Load the golden set</td><td>Search Evaluation → Import → paste <code>.queries</code> array</td></tr>
+<tr><td>Rotate an LLM key</td><td>Settings → LLM → add new key → toggle off old → delete</td></tr>
+<tr><td>Change AI wording</td><td>Settings → Prompts → edit template → Save</td></tr>
+<tr><td>Pause auto-descriptions</td><td>Settings → System → cron toggle off</td></tr>
+<tr><td>Fix a scraper login</td><td>Settings → Scrapers → paste fresh header → Save</td></tr>
+<tr><td>View as seller</td><td>Sidebar → Switch to Seller (check <code>tea_preferred_view</code>)</td></tr>
+</table>
+
+<div class="note">Full spec: <code>product-graph-web-ui/docs/</code> and API <code>docs/api-reference.md</code> § Admin routes. Business context: <a href="../docs/00-full-documentation.html">Full Documentation</a>.</div>
+<p class="nav"><a href="../../index.html">Portal</a> · <a href="web-store-owner.html">Next: Store Owner Guide →</a></p>
 </body></html>

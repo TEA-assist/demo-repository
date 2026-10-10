@@ -1,30 +1,56 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Guide — Store Owner — TEA</title><link rel="stylesheet" href="../assets/style.css"></head><body>
-<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Store Owner</p>
-<h1>Store Owner — <code>dash.asktea.ai → /seller</code></h1>
+<p class="nav"><a href="../../index.html">Portal</a> · User Guides — Store Owner · <a href="../docs/00-full-documentation.html">Full doc</a></p>
+<h1>Store Owner Guide — <code>asktea.ai → /seller</code></h1>
+<p>For sellers who own stores and their catalog. Admins: use sidebar <em>Switch to Seller</em> to see this view. Seller nav has exactly 4 items: <strong>Dashboard · Stores · Products · Profile</strong>. Store edit pages live at <code>/seller/stores/[id]/edit</code> (no nav entry). Only owners manage members.</p>
 
-<h2>Login &amp; role</h2>
-<p>Phone OTP or Google; admin users switch to Seller via sidebar <em>Switch to Seller</em>. Seller nav has 4 items: Dashboard · Stores · Products · Profile. Store edits exist at <code>/seller/stores/[id]/edit</code> (not a nav entry) and only owners can manage members.</p>
+<h2>1. Login &amp; role</h2>
+<ol>
+<li>Open <code>https://asktea.ai</code> and log in with <strong>phone OTP</strong> or <strong>Google</strong>.</li>
+<li>Sellers land on <code>/seller</code> (stats: total/active via <code>GET /stores/my/products/stats</code> — fast counts, no product rows).</li>
+<li>Admins: sidebar → <strong>Switch to Seller</strong>. Refresh once so the role cache (<code>tea_preferred_view</code>) settles.</li>
+</ol>
 
-<h2>Stores</h2>
+<h2>2. Stores — create, edit, team</h2>
+<ol>
+<li>Go to <strong>Stores</strong> → <strong>New store</strong> (max 3 per owner).</li>
+<li>Fill name, description, phone, logo (<code>PhotoUploader</code> with crop), address + map location, website/Instagram, country + currency, hours via <code>WorkingHoursEditor</code>. Save.</li>
+<li>Open the store → scroll to <strong>Team</strong> (<code>StoreMembersSection</code>). Owners add members by phone or email with role <code>owner/manager</code> (<code>POST /stores/{id}/members</code>); remove non-owners with the row delete (<code>DELETE /stores/{id}/members/{member_id}</code>); list anytime (<code>GET /stores/{id}/members</code>).</li>
+</ol>
+
+<h2>3. Products — list &amp; search</h2>
 <ul>
-<li>Create/edit a store: name, description, phone, logo (PhotoUploader, crop), location, hours via <code>WorkingHoursEditor</code>.</li>
-<li>Team: StoreMembersSection — list members with role badges, AddMemberDialog by phone/email (role owner/manager), MemberRow delete — owners can remove non-owner members. APIs: <code>GET /stores/{id}/members</code>, <code>POST/DELETE /stores/{id}/members</code>.</li>
+<li>Open <strong>Products</strong>. Cards are light (<code>ProductListItem</code>, 16 fields — no variants/descriptions payload) so the list stays fast.</li>
+<li>Search with <code>?q=</code> — now <strong>fuzzy-ranked</strong>: try <code>RAFFIA BRAIDED VISOR</code>. The exact name ranks first, then partial-word products. Typo-tolerant in both languages; under 3 chars it falls back to substring.</li>
+<li>Click a card → <code>ProductViewDialog → ProductView</code> self-fetches the full detail. Gallery fallback: color-matched → unlinked → all images.</li>
 </ul>
 
-<h2>Products wizard</h2>
-<p>Order (verify in <code>src/components/product/steps/</code>):</p>
+<h2>4. Products — 6-step wizard (in order, <code>src/components/product/steps/</code>)</h2>
 <ol>
-<li><strong>BasicInfo</strong> — names (trilingual), SKU, brand, category</li>
-<li><strong>Description</strong> — <code>short_description_en</code> required (≥20 chars)</li>
-<li><strong>N × Attribute groups</strong> — multi-piece products swap color-pattern for <code>CompositeColorSetsEditor</code> (<code>is_multi_piece</code>, <code>pieces</code>/<code>color_sets</code>, piece_id↔color_option_id validation)</li>
-<li><strong>Price &amp; Inventory</strong> — hosts <code>VariantGridEditor</code> (client-side cartesian in <code>cartesianAttr</code> useMemo)</li>
-<li><strong>Media</strong> — ≥3 images via <code>ProductImageUploader</code>, immediate upload to <code>POST /files/upload</code>, <code>alt_text_en</code> required, crop-and-reupload supported — payload sent inline via <code>lib/product-form.ts buildImagePayload</code></li>
-<li><strong>Review</strong> — validation_rules (required/min_length/… max_select), post-submit redirects to <em>Generate Description</em>.</li>
+<li><strong>BasicInfo</strong> — trilingual names, SKU, brand, category.</li>
+<li><strong>Description</strong> — <code>short_description_en</code> required (≥20 chars).</li>
+<li><strong>N × Attribute groups</strong> — fill each group. Multi-piece products (<code>is_multi_piece</code>) swap the color-pattern step for <code>CompositeColorSetsEditor</code> (<code>pieces</code>/<code>color_sets</code>, piece↔color validation).</li>
+<li><strong>Price &amp; Inventory</strong> — hosts <code>VariantGridEditor</code> (client-side cartesian in <code>cartesianAttr</code> useMemo). Set prices + quantities per variant.</li>
+<li><strong>Media</strong> — upload <strong>≥3 images</strong> via <code>ProductImageUploader</code> (immediate <code>POST /files/upload</code>, <code>alt_text_en</code> required, crop-and-reupload supported — payload built inline by <code>lib/product-form.ts buildImagePayload</code>).</li>
+<li><strong>Review</strong> — validation rules (required/min_length/…/max_select) are checked. <strong>Save</strong> → you are redirected to <em>Generate Description</em>.</li>
 </ol>
-<p>Lists show light cards (<code>ProductListItem</code>, 16 fields): <code>GET /stores/my/products</code> (search via <code>?q=</code>, now fuzzy-ranked). Card click → <code>ProductViewDialog → ProductView</code> self-fetches full detail; gallery fallback: color-matched → unlinked → all images.</p>
 
-<h2>Generate Description (<code>/seller/stores/[id]/products/[productId]/generate-description</code>)</h2>
-<p>Model selector shows only models with active API keys, auto-generates on entry, collapsed prompt + <em>Run Edited Prompt</em>, history dialog with restore, retry/skip on error. Results write <code>ai_description_en/ar</code>.</p>
+<h2>5. Generate Description (<code>/seller/stores/[id]/products/[productId]/generate-description</code>)</h2>
+<ol>
+<li>The page <strong>auto-runs</strong> on entry with the default model. The model dropdown lists <strong>only models with active API keys</strong>.</li>
+<li>Preview the <strong>en/ar</strong> results. To iterate: expand the collapsed prompt, edit it, press <strong>Run Edited Prompt</strong>.</li>
+<li>Open <strong>History</strong> to compare versions and <strong>Restore</strong> any of them. Results write <code>ai_description_en/ar</code>.</li>
+<li>On error: retry or skip — the product stays saved, descriptions can be generated later, and the 300s background cron also fills pending products.</li>
+</ol>
 
-<div class="note">Catalog docs: <code>product-graph-web-ui/docs/product-definition-system.md</code> · API: <code>product-graph-api/docs/product-definition-system.md</code></div>
+<h2>6. Seller cheat sheet</h2>
+<table><tr><th>I want to…</th><th>Do this</th></tr>
+<tr><td>See my totals</td><td>Seller Dashboard (total + active counts)</td></tr>
+<tr><td>Add a teammate</td><td>Store → Team → Add by phone/email → owner/manager</td></tr>
+<tr><td>Find a product with a typo</td><td>Products → search box (fuzzy ranking handles it)</td></tr>
+<tr><td>Add a product fast</td><td>Products → New → 6 steps → Save → Generate Description → Run</td></tr>
+<tr><td>Fix a bad AI description</td><td>Generate Description → edit prompt → Run Edited Prompt, or restore History</td></tr>
+</table>
+
+<div class="note">Catalog docs: <code>product-graph-web-ui/docs/product-definition-system.md</code> · API: <code>product-graph-api/docs/product-definition-system.md</code> · Business context: <a href="../docs/00-full-documentation.html">Full Documentation</a>.</div>
+<p class="nav"><a href="../../index.html">Portal</a> · <a href="web-admin.html">← Admin</a> · <a href="web-user.html">Next: Shopper (Web) →</a></p>
 </body></html>

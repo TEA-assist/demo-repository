@@ -4,7 +4,7 @@ Captured against production (1280×800, checked via `/api/v1/health` git_sha). T
 
 ```bash
 # from product-graph-web-ui repo (already has playwright 1.61)
-NODE_PATH=./node_modules npx playwright screenshot https://dash.asktea.ai/ar/login demo/assets/screenshots/dash-login.png
+NODE_PATH=./node_modules npx playwright screenshot https://asktea.ai/ar/login demo/assets/screenshots/dash-login.png
 NODE_PATH=./node_modules npx playwright screenshot https://app.asktea.ai/ar demo/assets/screenshots/app-home.png
 ```
 

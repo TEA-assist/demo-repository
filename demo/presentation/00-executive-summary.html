@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>00 — Executive Summary — TEA Demo</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · Presentation 00/05 — <a href="01-overview.html">Next → 01 Overview</a></p>
+<h1>00 — TEA — Executive Summary</h1>
+<p><span class="badge">Live on asktea.ai</span> <span class="badge">7,682 products</span> <span class="badge">EN + AR</span> <span class="badge">Web + Mobile</span></p>
+
+<h2>The one-liner</h2>
+<p><strong>TEA is an AI product finder for fashion retail.</strong> Shoppers describe what they want in plain words — in English or Arabic, typos included — and TEA returns ranked product cards with images, prices and store identity. No keyword gymnastics, no endless filters.</p>
+
+<h2>Why it matters (business value)</h2>
+<table><tr><th>Problem</th><th>TEA answer</th><th>Who benefits</th></tr>
+<tr><td>Keyword search fails on synonyms, paraphrases, typos across multilingual catalogs</td><td>Hybrid AI search: dense vectors + BM25 sparse fused with RRF + trigram fuzzy ranking</td><td>Shoppers convert faster; sellers get found</td></tr>
+<tr><td>Writing bilingual descriptions for 7,000+ products is slow and inconsistent</td><td>One-click LLM descriptions (en/ar) with 6 controllable prompt templates + history/restore</td><td>Sellers list faster; catalog quality rises</td></tr>
+<tr><td>Search quality is usually a black box</td><td>Built-in evaluation lab: 166-query golden set, MRR@10 / Recall@10 overall + EN/AR</td><td>Stakeholders see measurable quality</td></tr>
+</table>
+
+<h2>What is live today</h2>
+<ul>
+<li><strong>Shopper web</strong> (<code>app.asktea.ai</code>): anonymous AI chat (no account), random-products slider, login via OTP/Google, favorites.</li>
+<li><strong>Dashboard</strong> (<code>asktea.ai</code>): admin (8 tiles) + seller (stores, products, 6-step wizard, AI descriptions).</li>
+<li><strong>Mobile</strong>: React Native 0.86 shopper app (feed + chat drawer + product modal + favorites), flavor APKs.</li>
+<li><strong>Platform</strong>: FastAPI + AI Engine (Qwen3-Embedding-4B, DeepSeek V4 Flash) + Qdrant + Postgres + MinIO + Swarm/Caddy.</li>
+</ul>
+
+<h2>How to run this deck (10 min)</h2>
+<ol>
+<li>This summary (2 min) → <a href="01-overview.html">01 Overview</a> (problem, stack, numbers, roadmap)</li>
+<li><a href="02-architecture.html">02 Architecture</a> (Swarm, 11 routes, data plane, CI/deploy)</li>
+<li><a href="03-ai-pipeline.html">03 AI Pipeline</a> (hybrid RAG, fuzzy ranking, descriptions, eval)</li>
+<li><a href="04-roles-and-roadmap.html">04 Roles &amp; Roadmap</a> (who does what, live click-paths, KPIs, next steps)</li>
+<li>Then open the <a href="../prototype/demo-script.html">live demo script</a> and drive <code>asktea.ai</code> + <code>app.asktea.ai</code>.</li>
+</ol>
+
+<div class="note">Smoke check before presenting: <code>curl -s https://app.asktea.ai/api/v1/health | jq</code> — expect <code>status ok</code> + <code>git_sha</code>. Full story: <a href="../docs/00-full-documentation.html">Full Documentation</a>.</div>
+<p class="nav"><a href="01-overview.html">01 — Overview →</a></p>
+</body></html>

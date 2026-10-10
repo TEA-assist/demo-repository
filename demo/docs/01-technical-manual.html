@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Technical Manual — TEA AI Product Finder</title><link rel="stylesheet" href="../assets/style.css"></head><body>
+<p class="nav"><a href="../../index.html">Portal</a> · Full Documentation · <a href="00-full-documentation.html">← Master doc</a></p>
+<h1>Technical Manual — TEA AI Product Finder</h1>
+<p>Complete technical reference for the live <code>asktea.ai</code> stack. Sources: <code>product-graph-api/docs/</code>, <code>product-graph-web-ui/docs/</code>, <code>product-graph-ai-engine/docs/</code>, <code>product-graph-infra</code> README, <code>product-graph-mobile-app/docs/</code>.</p>
+
+<h2>1. Architecture overview</h2>
+<p>Single-node Docker Swarm, 5 stacks sharing attachable overlay <code>tea-infra-net</code>: <code>tea-infra</code> (Postgres 16, Redis 7, RabbitMQ 4, MinIO, Qdrant v1.19, pgAdmin, RedisInsight), <code>tea-monitor</code> (Grafana, Loki, Promtail), <code>tea-portainer</code> (Portainer CE), <code>tea-caddy</code> (Caddy 2.11 Cloudflare DNS-01), <code>tea-app</code> (ai-engine + api + web-ui from GHCR <code>:main</code>).</p>
+<table><tr><th>Domain</th><th>Target</th><th>Auth</th></tr>
+<tr><td><code>app.asktea.ai</code></td><td>api:8000</td><td>JWT / API keys</td></tr>
+<tr><td><code>asktea.ai</code></td><td>web-ui:3000</td><td>JWT httpOnly cookie + X-Requested-With</td></tr>
+<tr><td><code>grafana.asktea.ai</code></td><td>grafana:3000</td><td>Grafana login</td></tr>
+<tr><td><code>loki.asktea.ai</code></td><td>loki:3100</td><td>⚠️ none (internet-reachable)</td></tr>
+<tr><td><code>pg.asktea.ai</code></td><td>pgadmin:80</td><td>pgAdmin login</td></tr>
+<tr><td><code>redis.asktea.ai</code></td><td>redisinsight:5540</td><td>Redis password</td></tr>
+<tr><td><code>qdrant.asktea.ai</code></td><td>qdrant:6333</td><td>QDRANT_API_KEY (host port 6333 also published)</td></tr>
+<tr><td><code>portainer.asktea.ai</code></td><td>portainer:9000</td><td>Admin login</td></tr>
+<tr><td><code>storage.asktea.ai</code></td><td>minio:9000 (S3)</td><td>MinIO keys</td></tr>
+<tr><td><code>storage-admin.asktea.ai</code></td><td>minio:9001 (console)</td><td>MinIO console login</td></tr>
+</table>
+<div class="note"><strong>Hardening note</strong> (from <code>product-graph-infra/docs/security.md</code>): Docker-published ports bypass UFW via iptables — <code>qdrant:6333</code> and <code>loki:3100</code> are internet-reachable today. Options: remove host publishing / loopback bind / DOCKER-USER chain / Cloudflare Access. Inter-service trust: ai-engine runs with empty <code>ENGINE_API_KEY</code> so its X-API-Key guard is disabled — API ↔ engine trust is network isolation on the overlay only.</div>
+
+<h2>2. Data plane</h2>
+<ul>
+<li><strong>Postgres 16</strong> (async SQLAlchemy + asyncpg, 32 ORM models, 35 migrations): 7,682 <code>store_products</code>, 67k+ images, <code>product_embeddings</code> (one row per product × per model, id <code>md5(product_id:model)</code>), <code>embed_models</code> catalog (9 seeded: Qwen3-0.6B/4B/8B, F2LLM-v2-4B, jina-v5-text-small, BGE-M3, Nomic v2, e5-base/large), <code>llm_models/llm_api_keys</code> (Fernet-encrypted) <code>/llm_settings/prompt_templates/system_settings/ai_description_versions</code>, <code>search_eval_queries/judgments</code>, <code>activity_logs</code>, stores/members, catalog taxonomy.</li>
+<li><strong>Qdrant v1.19</strong>: per-model collections <code>products-qwen3-embedding-4b</code> (dims from model name: 0.6B→1024, 4B→2560, 8B→4096), point id <code>uuid5(product_id_lang)</code> — one point per language (en + ar), dense + BM25 sparse <code>text_bm25</code> indexed, flat filters <code>_color/_material/_category/_brand/_gender/_color_family/_size</code>.</li>
+<li><strong>Mongo Atlas</strong>: chat conversations/messages (optional → 503 when absent). <strong>MinIO</strong> 4 buckets: <code>product-graph, temp-files, profile-photos, store-photos</code>. <strong>Redis 7</strong>: response cache, rate-limit INCR Lua, distributed cron locks. <strong>RabbitMQ</strong>: <code>search_requests / web_scrape_jobs / search_results</code> (search consumer removed).</li>
+<li><strong>Bootstrap</strong>: engine always asks the API on startup (idempotent, backoff 5s→60s ×12) — no skip-if-file-exists.</li>
+</ul>
+
+<h2>3. API (FastAPI)</h2>
+<p>Unified envelope <code>APIResponse[T]</code>, typed domain exceptions (never raw HTTPException), every <code>raise</code> carries <code>translation_key</code> mapped in web-ui <code>messages/{en,ar,fa}.json</code>. Auth: phone OTP + Google OAuth, JWT access+refresh with <code>jti</code> rotation and reuse detection, httpOnly cookies + CSRF for browsers, Bearer for native, RBAC admin/seller.</p>
+<ul>
+<li><strong>Admin</strong> (<code>/api/v1/admin/</code>, <code>get_admin_user</code>): LLM models/keys/settings (6 endpoints), prompt templates, system settings, cron products, embedding cron (list/detail/active-model/reindex), ai-engine embed-text test, search-eval (generate/import/list/update/judgments/metrics/search).</li>
+<li><strong>Stores/products</strong>: store CRUD (max 3 per owner) + members (owner/manager), product CRUD with images/variants/color-sets, <code>GET /stores/my/products</code> (light <code>ProductListItem</code> 16 fields, <code>?q=</code> fuzzy), <code>GET /stores/my/products/stats</code> (<code>{total,active}</code> counts), public <code>GET /stores/{id}/products/{pid}</code> (rate-limited 120/min, no auth — chat product view), <code>GET /public/products/random</code> (Redis 1h), <code>GET /product-info/{id}/{lang}</code> (UUID→name resolution, minified for prompts).</li>
+<li><strong>Chat</strong>: <code>WS /ws/chat/{id}</code> (subprotocol token for anon, cookie for logged-in), <code>POST /chat/anonymous-session</code> (ephemeral 10-min WS-only token), REST + streaming frames.</li>
+<li><strong>Other</strong>: files (MinIO upload), health/ready/metrics (Prometheus), webhooks (<code>/webhook/embedding-result {product_id,lang,status,model}</code>), 862 tests ~75% coverage, mypy strict, ruff clean.</li>
+</ul>
+
+<h2>4. AI Engine (stateless)</h2>
+<ul>
+<li><strong>LLM</strong>: DeepSeek V4 Flash via OpenCode Zen (OpenRouter for overrides); two clients — default (descriptions/parsing) + conversational (chat/tools/summaries/titles); DB-backed encrypted keys with env fallback; runtime refresh via <code>POST /config</code>.</li>
+<li><strong>Chat</strong> (<code>POST /chat</code>): locale detect (fa&gt;ar&gt;en) → intent router (greeting/search/general) → tool-calling <code>search_products</code> first (parallel specs merged/deduped), parse fallback second (rewritten_query + filters + raw-query dual spec), direct answers skip search. Per spec: embed query (Qwen3 instruct prefix) → Qdrant filtered search + color-only tier + unfiltered fallback, size-bonus re-rank, model-aware thresholds (1024:0.3 / 2560:0.25), hybrid dense+sparse <code>Fusion(RRF)</code> pool ×3 cap 100 with stopwords/stemming/name-boost, language-aware dedupe (<code>prefer_lang</code>), color safety-net filter injection. SSE frames: <code>debug → assistant_start → product_cards → text_chunk* → assistant_end / error</code>. Pre-flight advisory pings (TTL cache, 2s→6s) never block — real calls arbitrate.</li>
+<li><strong>Embedding</strong> (<code>POST /embed-product</code>): embed monolingual passage per language → upsert <code>uuid5(product_id_lang)</code> with dense + BM25 sparse → webhook (3 attempts) → API marks <code>product_embeddings done/error</code>. Embed text: per-language structured text (name/category/<code>is_search_affecting</code> attributes + price-tier/season/occasion tokens), concrete fields first; filters aliased/normalized (printed→Multicolor, gender map, size canonical, one-size fallback).</li>
+<li><strong>Other</strong>: <code>/generate-description</code> (bilingual JSON, temp 0.7), <code>/summarize</code> (rolling S2), <code>/title</code> (2–6 words), <code>/similar</code> (category→color-family→unfiltered tiers, dense-only), <code>/eval/queries</code> + <code>/eval/search</code> (deterministic parse-path with per-hit scores), <code>/embed-text</code> (admin vector test), <code>/transcribe</code> (STT). 533 tests ~90%+.</li>
+</ul>
+
+<h2>5. Seller-list search (exact algorithm)</h2>
+<pre>WHERE (name ILIKE '%phrase%' ← exact substring, both languages
+       OR per-token trigram: name % 'token')   — both langs
+ORDER BY (exact-phrase bonus 1.0
+          + Σ greatest(similarity(name_en,tok), similarity(name_ar,tok))) DESC</pre>
+<p>Shared helper <code>_name_match_and_score(q)</code> in <code>product-graph-api/app/repositories/product_definition.py</code>. Typo-tolerant, multi-word aware ("RAFFIA BRAIDED VISOR" ranks exact first, then partials). &lt;3 chars → substring fallback. Store scope AND-ed.</p>
+
+<h2>6. Web UI (Next.js 16, React 19)</h2>
+<ul>
+<li>Public <code>(website)</code> group outside auth guard: home hero + <code>AnonymousChatBox</code> (anon session → WS, full-screen Sheet, <code>useCloseOnBack</code>) + <code>RandomProductsSection</code> (Swiper 1→3→5, autoplay with visibility pause) + <code>ProductViewDialog</code> (self-fetching detail). About at <code>/about</code>.</li>
+<li>Dashboard guard + locale prefix <code>always</code> (<code>/en|/ar|/fa</code>, default ar, RTL). Admin 11 nav items, seller 4 nav items, Switch View persists <code>tea_preferred_view</code>. RTK Query only (cookie + <code>X-Requested-With</code>, single refresh retry), Zod-validated responses, 370 Vitest tests + Playwright e2e.</li>
+<li>Chat: <code>useChat</code> state machine + <code>useChatSocket</code> transport (subprotocol token, 30s ping, backoff ≤30s, 4001 terminal), intent-themed bubbles, similar chips → <code>similar_request</code>, debug dialog, copy button.</li>
+<li>Seller product wizard order (<code>src/components/product/steps/</code>): BasicInfo → Description (<code>short_description_en</code> ≥20) → N attribute groups (multi-piece → <code>CompositeColorSetsEditor</code>) → PriceInventory (<code>VariantGridEditor</code> cartesian) → Media (≥3 images, <code>alt_text_en</code>, inline payload) → Review → redirect to Generate Description (model selector = models-with-active-keys only, auto-run, collapsed prompt + Run Edited Prompt, history restore).</li>
+</ul>
+
+<h2>7. Mobile (React Native 0.86)</h2>
+<ul>
+<li>Stack: RN 0.86 bare, paper 5.15, Navigation 7, Zustand 5 + TanStack Query 5, Axios + refresh interceptor, FastImage, MapLibre, Keychain, Geolocation, Bootsplash, i18next (ar/en/fa). Flavors dev/staging/production (<code>com.tea.app[.dev]</code>), <code>API_BASE_URL=https://app-dev.asktea.ai/api/v1</code> via Cloudflare Tunnel.</li>
+<li>Onboarding: phone (<code>{dialCode}{localNumber}</code>) or Google (<code>{id_token, client_type:'android'}</code>) → 6-digit OTP (Android SMS User Consent autofill, regex <code>code|otp|كود|رمز|کد</code>) → location/notifications permissions.</li>
+<li>Shopping: home feed (light lists) → <code>ProductViewModal</code> (self-fetch detail, gallery fallback, favorite toggle) → chat drawer (<code>wss://…/ws/chat/{id}?token=JWT</code>, ping/backoff, <code>idempotency_key</code> similar turns) → favorites/profile (avatar via envelope pattern).</li>
+<li>Known gaps: release builds debug-signed today (<code>keystore.properties</code> absent), no OTA/deep-link/push infra, Detox scaffolding only (missing dep + flavor paths + iOS workspace), one MapLibre touch patch with debug log pending cleanup.</li>
+</ul>
+
+<h2>8. Search evaluation</h2>
+<p>Golden set <code>scripts/seed_data/search_eval_golden.json</code> (<code>{"description","queries":[...]}</code>, 166 queries 124en/42ar): paste inner <code>queries</code> array (page tolerates wrapper object too) into admin Import → 166 rows. Judge dialog auto-runs search <code>limit:20</code> → toggle relevant → Save/Skip. Metrics MRR@10/Recall@10 (overall + EN/AR, cached 300s). Generate path builds bilingual catalog context (types + <code>is_search_affecting</code> attributes + major options) and calls engine <code>/eval/queries</code>.</p>
+
+<h2>9. CI/CD &amp; deployment</h2>
+<p>All 4 app repos run on <code>[self-hosted, tea-server]</code> runners. Quality gates (lint + format + typecheck + tests) → build (retry ×3, cache) → migrate → deploy (<code>flock</code> serialized, <code>stack deploy --detach=false</code> + force-update ×5, <code>git_sha</code> baked into <code>/health</code>). Infra repo: validate (compose config + caddy validate + shellcheck/yamllint/actionlint) → rsync → optional Ansible → rewrite server <code>.env</code> (16 vars) → <code>scripts/deploy.sh</code> (infra→monitor→portainer→caddy→app). Backups: Postgres dumps + Mongo <code>mongodump</code>→MinIO cron + Qdrant snapshots (see <code>dev-tools/</code> and infra <code>docs/backups.md</code>).</p>
+
+<h2>10. Security checklist</h2>
+<ul>
+<li>JWT rotation + reuse revocation, OTP 10-min + bypass only when <code>TWILIO_BYPASS=true</code>, Fernet-encrypted LLM keys (prod refuses to start without <code>LLM_ENCRYPTION_KEY</code>), per-route Redis rate limits + login lockout, PII redaction in logs, activity logs (DB + JSONL, 60-day retention).</li>
+<li>Open: Loki unauthenticated, Qdrant host-published, engine API-key guard disabled (overlay trust only), mobile APKs debug-signed, iOS Google Sign-In blocked on URL scheme. Each has a documented remediation in the source docs.</li>
+</ul>
+
+<div class="note">Specs: API <code>docs/api-reference.md</code> · Engine <code>docs/chat-flow.md</code> + <code>docs/embedding.md</code> + <code>docs/search-quality.md</code> · Web <code>docs/</code> · Infra <code>docs/security.md</code> + <code>docs/backups.md</code> · Mobile <code>docs/release-and-signing.md</code>.</div>
+<p class="nav"><a href="00-full-documentation.html">← Master doc</a> · <a href="../../index.html">Portal</a></p>
+</body></html>
