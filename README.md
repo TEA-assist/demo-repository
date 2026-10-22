@@ -10,6 +10,7 @@ Demo portal for the TEA (AI Product Finder) platform. Live stack runs on `asktea
 |---------|------|
 | Full Documentation — Master | [demo/docs/00-full-documentation.html](demo/docs/00-full-documentation.html) |
 | Full Documentation — Technical Manual | [demo/docs/01-technical-manual.html](demo/docs/01-technical-manual.html) |
+| Roadmap — Haya AI Future Features & Product Roadmap | [demo/docs/02-product-roadmap.html](demo/docs/02-product-roadmap.html) |
 | Presentation — Executive Summary | [demo/presentation/00-executive-summary.html](demo/presentation/00-executive-summary.html) |
 | Presentation — Overview | [demo/presentation/01-overview.html](demo/presentation/01-overview.html) |
 | Presentation — Architecture | [demo/presentation/02-architecture.html](demo/presentation/02-architecture.html) |
