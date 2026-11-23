@@ -542,6 +542,8 @@ configuration is missing.
 
 ### 14.1 Current gaps
 
+Some gaps below are intentionally historical; delivery address and shipping gaps are now partially closed by section 14.11.
+
 - Checkout quotes currently contain item subtotals only. There are no shipping,
   tax, discount, or grand-total snapshots.
 - `StoreOrder.total_minor` represents the current item subtotal. Order items
@@ -772,3 +774,33 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
   provider-specific live void/refund behavior are still pending.
 - Automated supplier response deadlines remain separate work; the existing
   `supplier_response_deadline` field is not yet populated or processed.
+
+### 14.11 Initial delivery address and shipping status (2026-11-23)
+
+- Added migration `a2b3c4d5e6f7_add_addresses_and_shipping.py`; dev is verified
+  at `a2b3c4d5e6f7` head.
+- Buyers now have reusable structured addresses with recipient/contact,
+  country/city/region/district, street/building/floor/apartment, postal code,
+  landmark, delivery notes, coordinates, arbitrary metadata, and one default
+  address per buyer. `GET/POST /addresses` and `PUT/DELETE /addresses/{id}` are
+  available.
+- Stores now have configurable shipping methods and rate rules. Methods include
+  type, carrier, default/active/sort state, delivery-day range, and config JSON;
+  rates support country/region/city zones, subtotal/weight/quantity bounds,
+  fixed or free amount, currency, priority, delivery days, and metadata.
+- Admin and store member APIs are available for shipping-method CRUD. The
+  quote/checkout flow captures an inline address or saved address ID, snapshots
+  the address, returns all applicable shipping options, prices the selected
+  option server-side, and snapshots the method/rate on each store sub-order.
+- Quotes, parent orders, and store sub-orders now store separate subtotal,
+  shipping, tax, discount, and payable totals. Tax is fixed at zero for now.
+  Mock payments and refunds use the store sub-order total including shipping.
+- Missing address or no matching rate blocks order creation when a store has
+  active shipping methods; stores with no shipping methods retain zero-shipping
+  behavior for compatibility.
+- Web checkout now includes the address form, shipping option selection, and
+  per-store shipping/subtotal display.
+- Still pending: seller/admin shipping-management UI, tax and receipts,
+  package/label integration, carrier-calculated rates, effective dates/cutoffs,
+  pickup scheduling, supplier shipping costs, split packages, return-shipping
+  policy, and live-carrier sandbox verification.
