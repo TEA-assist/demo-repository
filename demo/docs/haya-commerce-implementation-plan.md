@@ -804,3 +804,14 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
   package/label integration, carrier-calculated rates, effective dates/cutoffs,
   pickup scheduling, supplier shipping costs, split packages, return-shipping
   policy, and live-carrier sandbox verification.
+
+### 14.12 Tax, returns, settlement, delivery, and notification foundations (2026-11-23)
+
+- Added migrations `c4d5e6f7a8b9` (tax profiles, tax snapshots, commerce documents), `d5e6f7a8b9c0` (return policies, RMA workflow, partial refunds), `e6f7a8b9c0d1` (supplier settlement), and `f8b9c0d1e2f3` (delivery policies, exceptions, notifications, promised delivery). Dev is at `f8b9c0d1e2f3`.
+- Tax: configurable multi-jurisdiction profiles with issuer details, inclusive/exclusive pricing, stacked/compound components, effective dates, product tax categories, shipping taxability, tax snapshots, receipts/invoices, and credit-note issuance. Tax remains zero unless an active profile exists.
+- Returns: versioned policies, buyer RMA requests, seller/admin approval/rejection/receipt/completion, item-level partial mock refunds with tax/shipping/restocking calculations, and credit notes.
+- Settlement: after-delivery supplier settlement policy, idempotent supplier payable/fee/reserve ledger entries, available holdings, payout creation, and manual paid reconciliation.
+- Delivery: dispatch cutoff and promised-delivery snapshots, delivery-exception records, and admin/seller APIs.
+- Notifications: in-app notifications for order, supplier, shipment, return, expiry, and settlement-adjacent events; email/SMS/WhatsApp providers remain pending.
+- Provider-neutral payment/supplier/carrier interfaces and mock/operator/manual adapters are defined; live integrations remain blocked on provider selection.
+- Shipping configuration UI is implemented for sellers/admins. Tax, return, settlement, and notification-management UI remains the next frontend slice.
