@@ -1,7 +1,7 @@
 # Haya Commerce, Orders, and Fulfillment — Implementation Plan
 
-**Status:** M1, shared M2 referrals, and the mock-payment demo slice are implemented. Mock payment is enabled for the current investor-demo production; live PSP and fulfillment rollout decisions remain open.
-**Updated:** 2026-11-22
+**Status:** M1, shared M2 referrals, the mock-payment slice, M3 Assisted Lead / Order, and the non-PSP M4 mock/operator order lifecycle are implemented. Mock payment is enabled for the current investor-demo production; live PSP, supplier API, settlement, and warehouse rollout decisions remain open.
+**Updated:** 2026-11-23
 **Repositories:** `product-graph-api`, `product-graph-web-ui`
 **Plan owner:** Haya product team
 
@@ -433,11 +433,12 @@ continues; Haya Checkout must wait for the PSP and order-write/operations plan.
 
 ## 12. Immediate next step
 
-Deploy the mock-payment code and migration to the investor-demo environment,
-then verify the checkout/pay/success path there. After that proceed with
-supplier-order handling, shipping/tax policy, and provider sandbox work. The
-mock uses server-resolved catalog/variant prices only; live Haya retail pricing
-and the real PSP remain separate later decisions.
+Verify the cart → quote → mock order → supplier accept/reject → buyer decision →
+fulfillment path in the investor-demo environment, then exercise the assisted
+lead queue and conversion reporting. After that, complete M0 provider sandbox,
+shipping/tax/returns policy, supplier API pilot, and live PSP work. The mock
+continues to use server-resolved catalog/variant prices only; live Haya retail
+pricing and the real PSP remain separate later decisions.
 
 ## 13. Implementation progress
 
@@ -500,3 +501,274 @@ localized success page. Shipping and tax are excluded. `MOCK_PAYMENTS_ENABLED`
 is true for the current investor demo and can be set false when a real PSP goes
 live. No real gateway is selected and no funds move. Alembic revision
 `c7d8e9f0a123_add_mock_checkout_orders.py` is applied to dev.
+
+
+### M3 — Assisted Lead / Order (code implemented)
+
+Buyer requests now persist with an immutable product/variant snapshot, contact
+and delivery details, explicit consent, a store-specific commission rate
+snapshot, and a status timeline. Store members and admins use in-app lead
+queues to progress `new → contacted → quoted/accepted → converted/declined/expired`.
+Conversion requires an accepted lead and a merchant order reference, is
+deduplicated per store, and writes an approved commission entry to the unified
+commission ledger. Public product eligibility now supports `assisted_lead`.
+No external email/SMS/WhatsApp notification provider is used.
+
+### M4 — Mock/operator Haya Checkout lifecycle (code implemented)
+
+Added an expiring server-priced multi-store quote endpoint and buyer cart/
+checkout UI. Orders snapshot retail prices and protected supplier costs.
+Supplier orders are handled through store-member and admin operator queues:
+accept/reject, operator references, buyer continue/cancel decisions after a
+rejection, mock refunds, order events, and store-direct shipment/tracking.
+Buyer order history/detail and seller/admin order operations are available.
+Readiness now treats the operator queue, store-direct fulfillment, assisted
+lead in-app queue, and supplier-cost configuration as implemented code while
+keeping live PSP, supplier API, settlement, tax/shipping/returns, and Haya
+warehouse rollout blocked. Public sales-model labels remain Planned.
+
+Alembic revision `e8f9a0b1c2d3_add_commerce_order_lifecycle_and_leads` is applied
+to dev and adds quotes, supplier costs, order events, shipments, refunds,
+assisted leads, and the generalized commission ledger.
+
+## 14. Next commerce coverage plan — shipping, tax, policies, settlement, and automation
+
+This section is an implementation attachment to the approved plan. The current
+mock/operator MVP is not yet a complete live-commerce financial or delivery
+system. Do not hardcode tax rates, legal invoice rules, shipping prices,
+settlement terms, or consumer-policy terms before product/legal/finance approves
+them. Keep these settings configurable and block a live checkout where required
+configuration is missing.
+
+### 14.1 Current gaps
+
+- Checkout quotes currently contain item subtotals only. There are no shipping,
+  tax, discount, or grand-total snapshots.
+- `StoreOrder.total_minor` represents the current item subtotal. Order items
+  snapshot retail and supplier cost, but not taxes, discounts, or delivery costs.
+- Buyer address is read from the user profile when an order is displayed; it is
+  not a structured, immutable recipient/address snapshot on the order.
+- `Shipment` stores carrier/tracking/status only. It has no service level,
+  package, shipping-price, or promised-delivery information.
+- There is no tax jurisdiction/rate model, invoice/receipt, credit note, return
+  request, settlement, or supplier payout model.
+- Refunds currently refund a complete mock store-order transaction; partial
+  refunds and return-linked refund calculations are not supported.
+- `Order.buyer_decision` has no deadline. `StoreOrder.supplier_response_deadline`
+  exists but is not populated or processed.
+- `AssistedLead.expires_at` exists but is not populated or processed.
+
+### 14.2 Shipping methods, price rules, and snapshots
+
+Support per-store shipping methods, with a separate method/rate set for Haya
+warehouse fulfillment when Phase 2 begins. Initial configurable price models:
+
+- Flat rate.
+- Free shipping above a threshold.
+- Order-value bands.
+- Weight bands or per-weight increments.
+- Destination-zone pricing by country/region/city/remote area.
+- Store pickup where the store enables it.
+- Standard, express, and same-day service levels when the store supports them.
+- Live carrier-calculated rates and label purchase are later integrations.
+
+Recommended records:
+
+- `shipping_methods`: store/platform owner, code, localized display name,
+  fulfillment method, service level, active flag, estimated transit days,
+  cutoff time, and currency.
+- `shipping_rate_rules`: method, destination zone, order-value/weight bounds,
+  base amount, per-item/per-weight increment, free-shipping threshold, currency,
+  priority, and effective dates.
+- `shipping_quotes` or quote snapshots: selected method, matched rule/version,
+  destination zone, shipping amount, and delivery estimate.
+- `packages` and `shipment_packages`: package weight/dimensions, included item
+  quantities, and associated shipment. Carrier scan history can be a later
+  `shipping_events` table.
+
+Add per-store-order monetary snapshots for item subtotal, discount, customer
+shipping charge, supplier shipping cost, taxable amount, tax, and grand total.
+The parent order should retain per-currency totals rather than inventing an FX
+conversion. One store sub-order may select one shipping method initially; split
+packages can still share that method. All rates are calculated by the server;
+the browser may select a method but never supplies its price. Missing applicable
+shipping rules block checkout instead of silently returning a guessed price.
+
+Add a structured recipient snapshot to each store sub-order: name, phone,
+country, city, district, street/building, postal/national-address fields where
+required, delivery notes, and optional coordinates. Keep the snapshot immutable
+after order placement. The current free-text user address is insufficient for
+zone pricing and delivery handoff. Product/variant weight exists in the catalog;
+unit normalization and optional dimensions still need defining.
+
+Checkout UI must show a shipping choice, price, delivery estimate, and per-store
+subtotal. Admin/seller UI must show the chosen service, dispatch deadline, and
+delivery exceptions. Refund rules must separately state whether customer-paid
+shipping is refundable. Keep customer shipping revenue and supplier shipping
+cost separate for margin and settlement calculations. Shipping is not part of
+referral commissionable item subtotal.
+
+### 14.3 Tax, receipts, invoices, and credit notes
+
+Tax must be configurable by jurisdiction, not embedded as country constants.
+Coverage should include country/region, rate in basis points, effective dates,
+inclusive/exclusive display, product tax category (standard/zero-rated/exempt),
+tax registration details, and tax-on-shipping behavior. Tax is calculated
+server-side after discounts and snapshotted with the applicable rate,
+jurisdiction, taxable base, and rounding result. Define whether rounding occurs
+per line or at invoice total and how order-level discounts are allocated.
+
+For Haya Checkout, Haya is the seller of record and must issue the buyer's
+receipt/tax invoice. Store Referral and Assisted Lead remain merchant sales; the
+merchant issues the buyer receipt, while Haya records only attribution,
+conversion, and commission evidence.
+
+Add immutable invoice/receipt records with a unique sequence scoped to legal
+entity/country/year, seller and buyer tax details, item/discount/shipping/tax
+lines, currency, payment reference, issue time, and snapshot data. Generate a
+localized PDF and store it in MinIO for buyer download. Refunds require linked
+credit notes; void/reissue operations must be audited and must not rewrite an
+issued document. Arabic/bilingual requirements and invoice entity details need
+legal confirmation before enabling tax invoices in a market.
+
+Decisions required: legal invoice entity and registration per market, applicable
+tax rates/categories, inclusive/exclusive display, tax treatment of shipping,
+mandatory invoice fields, invoice language/sequence rules, and owner of tax
+filing/accounting review.
+
+### 14.4 Delivery policy and service levels
+
+Create a versioned delivery policy per store/country or platform default. Cover
+dispatch/handling SLA, cutoff time, business days and holidays, estimated versus
+promised delivery windows, remote-area restrictions, address changes, failed
+delivery/reattempt rules, split shipments, proof of delivery, lost/damaged/missing
+items, buyer notifications, liability, and support/escalation ownership.
+
+Snapshot the policy version and delivery promise on the order. Add fields such as
+`dispatch_due_at`, `delivery_promise_from`, `delivery_promise_to`,
+`delivery_policy_version`, and buyer acceptance time. Admin/seller queues should
+surface overdue dispatches and delivery exceptions. The store/Haya responsibility
+matrix must differ by sales model: Haya Checkout is Haya's buyer-facing support
+responsibility; Store Referral and Assisted Lead remain the merchant's sale and
+delivery responsibility.
+
+### 14.5 Returns and partial refunds
+
+Add versioned return policies with return window, return-shipping payer,
+condition requirements, non-returnable categories, exchange/final-sale rules,
+restocking fee, RMA requirement, refund method/timing, original-shipping refund
+rule, and return address.
+
+Add `return_requests` (RMA, order/store order, reason, status, policy snapshot),
+`return_items` (item/quantity/condition/resolution), return-shipment tracking,
+and an append-only return event timeline. Proposed states:
+
+`requested → approved/rejected → in_transit → received → inspected →
+refunded/replaced/declined → closed`.
+
+Extend the refund model/service to support multiple partial refunds per payment
+transaction, linked to return items and credit notes, with a hard invariant that
+cumulative refunds cannot exceed the captured amount. Record restocking fees and
+shipping refunds independently. Supplier recovery for a returned item must be a
+settlement adjustment, not a mutation of historical supplier cost. Return label
+purchase and warehouse reverse logistics can follow later. Store Referral and
+Assisted Lead returns remain merchant-owned; Haya only adjusts commission when
+the merchant/network reports the reversal.
+
+### 14.6 Supplier settlement ledger
+
+Keep supplier settlement separate from referral/lead commission entries. Add
+store settlement accounts, settlement periods, immutable settlement lines,
+settlement headers, adjustment entries, and supplier invoice references.
+Settlement lines should link to source order/store-order/items and distinguish
+item cost, supplier shipping, refund recovery, penalty, bonus, and manual
+adjustment. Snapshot supplier cost and currency; never recompute it from current
+catalog settings.
+
+Proposed states: `draft → pending_approval → approved → scheduled → paid →
+closed`. Require audited, preferably dual-approved, manual adjustments. Store
+statements should show period, currency, source orders, deductions, payable
+amount, payment reference, and paid date. Do not net different currencies or
+delete financial entries; use reversal/adjustment lines. Negative balances need
+an approved carry-forward or recovery policy.
+
+Product/finance decisions required: settlement trigger (acceptance, dispatch,
+delivery, or after the return window), payout cycle, reserve/holdback, payout
+rail/KYC, supplier invoice/self-billing process, tax treatment, FX policy, and
+recovery of refunds/chargebacks. Recommended initial approach is to accrue on
+acceptance and release after delivery plus the approved return window, but this
+must be commercially approved before activation.
+
+### 14.7 Buyer-decision timeout automation
+
+Add `buyer_decision_deadline`, reminder timestamp, expiry timestamp, and expiry
+reason to the parent order. Start the deadline when the first supplier rejection
+places the order into `buyer_decision_required`. Recommended configurable default
+is 48 hours. If the buyer does not respond, cancel the entire order and refund or
+void all store sub-orders; do not auto-continue without explicit buyer consent.
+Record a system order event and notify buyer, store operations, and admins. Allow
+admin extension only with an audited reason. Use UTC and row locking so a buyer
+decision racing the expiry job cannot be applied twice.
+
+Implement as a commerce automation cron using the API's existing asyncio
+lifespan-task and Redis distributed-lock pattern. Run in bounded batches, use
+`FOR UPDATE SKIP LOCKED`, and make retries idempotent. Suggested settings:
+`commerce_automation_cron`, `buyer_decision_timeout_hours`, and
+`buyer_decision_reminder_hours`. The mock path records a mock refund; the future
+PSP path must void/refund according to provider capabilities.
+
+### 14.8 Assisted-lead expiry automation
+
+Populate `AssistedLead.expires_at` at creation from a configurable policy;
+recommended initial default is 30 days. Expire active `new`, `contacted`,
+`quoted`, or `accepted` leads that pass the deadline, append a system event, and
+never create commission for expired leads. Converted and declined leads are
+terminal. Prevent conversion after expiry unless an authorized user extends the
+lead with an audited reason. A conversion racing expiry must lock and recheck the
+lead state.
+
+Use a bounded, idempotent cron batch every 15–60 minutes, with pre-expiry and
+expiry notifications. Add expiry/reminder timestamps and optionally
+`assisted_lead_expiry_days` to store commerce configuration or platform settings. Lead
+notification delivery can initially be in-app; email/SMS/WhatsApp requires a
+separate provider decision.
+
+### 14.9 Recommended implementation sequence
+
+1. Buyer-decision timeout and lead expiry automation. These can be implemented
+   without deciding tax rates or supplier settlement terms.
+2. Structured checkout address, per-store shipping methods/rules, and shipping
+   amounts/estimates in quote and order snapshots.
+3. Configurable tax calculation and tax snapshots; keep live checkout blocked
+   where jurisdiction configuration is absent.
+4. Immutable receipts/invoices and credit notes after legal entity/tax rules are
+   confirmed.
+5. Return policy, RMA workflow, and partial refunds.
+6. Supplier settlement ledger and statements after finance approves terms.
+7. Live carrier rates/labels, warehouse returns, and M5 inventory flows later.
+
+Each slice requires additive migrations, typed APIs, authorization, localized
+buyer/seller/admin UI, audit events, and tests for currency rounding,
+multi-store/currency behavior, authorization, idempotency, and race conditions.
+
+### 14.10 Initial automation implementation status (2026-11-23)
+
+- Added migration `f1a2b3c4d5e6_add_commerce_automation_deadlines.py`; dev is
+  verified at `f1a2b3c4d5e6` head.
+- Parent orders now store buyer-decision deadline/expiry metadata. A supplier
+  rejection starts the configured deadline (48-hour default); an expired mock
+  order is cancelled and all remaining mock payments are refunded. The expiry is
+  idempotent and recorded in the order timeline.
+- New assisted leads store an expiry date (30-day default). Due active leads are
+  expired by the job, recorded in their event timeline, and cannot be converted
+  or earn commission after expiry. Existing active leads are backfilled using
+  their creation time plus 30 days; no active leads existed in dev at upgrade.
+- The commerce automation job runs every five minutes under the API's Redis
+  distributed-lock pattern. Admin System Settings now exposes the automation
+  toggle and timeout/expiry durations; accepted ranges are 1–720 hours and
+  1–3650 days.
+- The job currently processes mock-provider refunds only. Buyer/store reminder
+  delivery, push/email/SMS notifications, admin deadline extensions, and
+  provider-specific live void/refund behavior are still pending.
+- Automated supplier response deadlines remain separate work; the existing
+  `supplier_response_deadline` field is not yet populated or processed.
