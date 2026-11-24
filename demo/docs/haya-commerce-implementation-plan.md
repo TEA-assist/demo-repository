@@ -638,6 +638,12 @@ tax rates/categories, inclusive/exclusive display, tax treatment of shipping,
 mandatory invoice fields, invoice language/sequence rules, and owner of tax
 filing/accounting review.
 
+The API now seeds a separate reference-only profile and currency mapping for all
+22 Arab League countries. It contains source links, research dates, and explicit
+partial/conflicting statuses where public information is incomplete. This
+catalog does not activate store tax rules or replace the legal approvals above;
+checkout tax remains zero until a store has an active, reviewed tax profile.
+
 ### 14.4 Delivery policy and service levels
 
 Create a versioned delivery policy per store/country or platform default. Cover
@@ -814,4 +820,21 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
 - Delivery: dispatch cutoff and promised-delivery snapshots, delivery-exception records, and admin/seller APIs.
 - Notifications: in-app notifications for order, supplier, shipment, return, expiry, and settlement-adjacent events; email/SMS/WhatsApp providers remain pending.
 - Provider-neutral payment/supplier/carrier interfaces and mock/operator/manual adapters are defined; live integrations remain blocked on provider selection.
-- Shipping, tax, return-policy, return-queue, and settlement management UI is implemented in the admin store detail; seller store edit includes shipping, returns, and settlement panels. Buyer order details include return-request UI and return status. Automatic credit notes now follow completed refunds. Remaining frontend work: richer document printing/downloads, notification preferences, and deeper settlement reports.
+- Shipping, tax, return-policy, return-queue, and settlement management UI is implemented in the admin store detail; seller store edit includes shipping, returns, and settlement panels. Buyer order details include return-request UI and return status. Automatic credit notes now follow completed refunds. Remaining frontend work: notification preferences.
+
+### 14.13 Commerce document PDF delivery (2026-11-24)
+
+- Added snapshot-based PDF rendering for receipts, tax invoices, and credit notes. The renderer uses bundled Noto Sans and Noto Naskh Arabic fonts, supports English, Arabic, and Persian layouts with RTL direction, and never recalculates order totals or tax.
+- Buyers, store members, and admins can download issued documents through authenticated API endpoints. PDFs are cached in the private `commerce-documents` MinIO bucket and are not exposed through public object URLs.
+- Issuance attempts a best-effort cache write; missing or failed PDFs are regenerated on download, so document issuance remains independent of renderer/storage availability.
+- Buyer order details, seller order cards, and admin order details now list issued documents, allow seller/admin receipt or invoice issuance, and expose PDF download actions.
+- Legal invoice entity, mandatory fields, and market-specific language requirements still require sign-off before enabling tax invoices in a market. The renderer only presents the approved issuer/profile snapshot and does not activate tax.
+
+### 14.14 Settlement recovery and statements (2026-11-24)
+
+- Added migration `a3b4c5d6e7f8_add_settlement_recovery_and_shipping.py` with reserve-release delay and refund-recovery policy fields, per-order supplier shipping cost, and a refund link on supplier ledger entries. Dev is at `a3b4c5d6e7f8`.
+- Completed returns now create idempotent, refund-linked supplier recovery entries using per-item supplier cost (with proportional fallback), capped at the remaining payable. Historical supplier cost is never changed.
+- Reserve holds are released as separate positive ledger entries after the configured delay. Payouts enforce the minimum payout, mark entries `assigned`, and support voiding unpaid drafts back to available.
+- Supplier shipping cost is captured during supplier acceptance and settled as its own ledger line.
+- Added settlement statements with opening/closing balances, period entries, paid payouts, and totals by entry type, plus the admin/seller statement and payout-void UI.
+- Finance approval is still required before activating settlement terms, payout rails, or reserve/recovery policy values. Automated bank reconciliation and dual-approved manual adjustments remain pending.
