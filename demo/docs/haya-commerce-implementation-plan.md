@@ -814,4 +814,4 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
 - Delivery: dispatch cutoff and promised-delivery snapshots, delivery-exception records, and admin/seller APIs.
 - Notifications: in-app notifications for order, supplier, shipment, return, expiry, and settlement-adjacent events; email/SMS/WhatsApp providers remain pending.
 - Provider-neutral payment/supplier/carrier interfaces and mock/operator/manual adapters are defined; live integrations remain blocked on provider selection.
-- Shipping configuration UI is implemented for sellers/admins. Tax, return, settlement, and notification-management UI remains the next frontend slice.
+- Shipping, tax, return-policy, return-queue, and settlement management UI is implemented in the admin store detail; seller store edit includes shipping, returns, and settlement panels. Buyer order details include return-request UI and return status. Automatic credit notes now follow completed refunds. Remaining frontend work: richer document printing/downloads, notification preferences, and deeper settlement reports.
