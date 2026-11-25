@@ -572,7 +572,8 @@ warehouse fulfillment when Phase 2 begins. Initial configurable price models:
 - Destination-zone pricing by country/region/city/remote area.
 - Store pickup where the store enables it.
 - Standard, express, and same-day service levels when the store supports them.
-- Live carrier-calculated rates and label purchase are later integrations.
+- Live carrier-calculated rates and label purchase were deferred at planning
+  time; the Easyship pilot is implemented in §14.16.
 
 Recommended records:
 
@@ -778,8 +779,9 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
 - The job currently processes mock-provider refunds only. Buyer/store reminder
   delivery, push/email/SMS notifications, admin deadline extensions, and
   provider-specific live void/refund behavior are still pending.
-- Automated supplier response deadlines remain separate work; the existing
-  `supplier_response_deadline` field is not yet populated or processed.
+- Automated supplier response deadlines were implemented on 2026-11-24; see
+  §14.15. The existing `supplier_response_deadline` field is now populated and
+  processed.
 
 ### 14.11 Initial delivery address and shipping status (2026-11-23)
 
@@ -806,10 +808,11 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
   behavior for compatibility.
 - Web checkout now includes the address form, shipping option selection, and
   per-store shipping/subtotal display.
-- Still pending: seller/admin shipping-management UI, tax and receipts,
-  package/label integration, carrier-calculated rates, effective dates/cutoffs,
-  pickup scheduling, supplier shipping costs, split packages, return-shipping
-  policy, and live-carrier sandbox verification.
+- Still pending: effective dates/cutoffs, pickup scheduling, split packages,
+  return-shipping policy, and live-carrier sandbox verification. Package presets,
+  carrier-calculated rates, and private label purchase were implemented in
+  §14.16; seller/admin shipping-management UI is implemented in admin store
+  detail and seller store edit panels.
 
 ### 14.12 Tax, returns, settlement, delivery, and notification foundations (2026-11-23)
 
@@ -819,7 +822,7 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
 - Settlement: after-delivery supplier settlement policy, idempotent supplier payable/fee/reserve ledger entries, available holdings, payout creation, and manual paid reconciliation.
 - Delivery: dispatch cutoff and promised-delivery snapshots, delivery-exception records, and admin/seller APIs.
 - Notifications: in-app notifications for order, supplier, shipment, return, expiry, and settlement-adjacent events; email/SMS/WhatsApp providers remain pending.
-- Provider-neutral payment/supplier/carrier interfaces and mock/operator/manual adapters are defined; live integrations remain blocked on provider selection.
+- Provider-neutral payment/supplier/carrier interfaces and mock/operator/manual adapters are defined; Easyship is selected for the carrier pilot (§14.16), while live payment and supplier integrations remain blocked on provider selection.
 - Shipping, tax, return-policy, return-queue, and settlement management UI is implemented in the admin store detail; seller store edit includes shipping, returns, and settlement panels. Buyer order details include return-request UI and return status. Automatic credit notes now follow completed refunds. Remaining frontend work: notification preferences.
 
 ### 14.13 Commerce document PDF delivery (2026-11-24)
@@ -838,3 +841,22 @@ multi-store/currency behavior, authorization, idempotency, and race conditions.
 - Supplier shipping cost is captured during supplier acceptance and settled as its own ledger line.
 - Added settlement statements with opening/closing balances, period entries, paid payouts, and totals by entry type, plus the admin/seller statement and payout-void UI.
 - Finance approval is still required before activating settlement terms, payout rails, or reserve/recovery policy values. Automated bank reconciliation and dual-approved manual adjustments remain pending.
+
+### 14.15 Supplier response escalation and SMS (2026-11-24)
+
+- Added migration `b4c5d6e7f8a9_add_supplier_escalation_and_sms.py`: per-store supplier response timeout, store-order escalation timestamp, and a durable `commerce_sms_outbox` table. Dev is at `b4c5d6e7f8a9`.
+- Store commerce profiles now carry `supplier_response_timeout_hours` (default 24, range 1–720), editable in the admin commerce panel. The deadline is snapshotted when a store order enters `supplier_pending`.
+- The five-minute commerce automation job escalates overdue, still-pending store orders without auto-rejecting them. It appends a `supplier_response_escalated` order event and queues one SMS per active admin with a linked phone number.
+- SMS is sent only through the existing Twilio configuration using a new generic `SmsService.send_sms` path. The outbox retries failed deliveries up to three attempts and keeps failures visible; disabling Twilio leaves queued messages pending.
+- Admin Order Operations now shows an overdue-supplier queue with the deadline and SMS sent/pending/failed counts. Accept/reject removes the item from the queue.
+- Email-only admins do not receive escalation SMS until they link and verify a phone through the existing OTP flow. Buyer reminders and non-SMS notification channels remain pending.
+
+### 14.16 Carrier rates and private labels — Easyship pilot (2026-11-25)
+
+- Added migration `c6d7e8f9a0b1_add_carrier_reference_and_shipping_profiles.py`. It seeds 4 carrier aggregator references (Easyship, Shippo, EasyPost, ShipStation API) and 88 provider × Arab League country coverage rows. Every route is `unverified` and `reference_only`; no prices or live availability are seeded. Shipments gain provider/label cost/idempotency/storage fields, and order items gain per-unit weight snapshots.
+- Admins manage the Haya-owned Easyship connection through `GET/PUT /admin/carriers/providers/{provider_code}/connection`. The API key is Fernet-encrypted, masked in responses, and can be cleared; sandbox/production base URLs follow the connection environment. Providers and market coverage are exposed read-only at `/admin/carriers/providers` and `/admin/carriers/providers/{provider_code}/markets`.
+- Stores configure an active ship-from origin and 1–20 package presets via `GET/PUT /stores/{store_id}/shipping-profile`. Live rates require the active profile, an enabled Easyship connection, a destination address, and line weights. `carrier_calculated` shipping methods call `POST /rates` (API version `2024-09`) during quote/checkout, offer only store-currency options, and attach a 15-minute quote expiry. Checkout rejects expired or stale rate selections; failures block checkout with `carrier_rates_unavailable` instead of inventing a price.
+- Store members and admins can buy a label from the checkout-selected rate via `POST /stores/{store_id}/orders/{store_order_id}/carrier-label` (admin alias under `/admin/orders/...`). Purchases require an accepted/processing store order, are idempotent per key, and block duplicate pending/purchased labels. The provider label is validated as PDF and stored in the private `MINIO_SHIPPING_LABEL_BUCKET` (`shipping-labels` by default); authenticated download and provider cancellation endpoints are wired, and cancellation is limited to purchased labels that have not shipped.
+- Buyer shipping revenue and actual label cost are recorded separately (`buyer_shipping_charge_minor` vs. `label_cost_minor`/`label_cost_currency`). `ShipmentResponse` exposes provider shipment/label IDs, label status, cost/currency, purchase/void timestamps, tracking, and status; storage keys are never returned.
+- Tests: 3 Easyship adapter contract tests plus commerce rate/label, admin connection, and store-profile integration tests. API suite: 1170 passed; web suite: 438 passed; lint, formatting, type checks, production build, and migration upgrade/downgrade on the test database pass.
+- Still pending: verified Kuwait-domestic Easyship account and sandbox credentials, live rate/label verification, carrier webhook tracking sync, additional providers, and warehouse/M5 label flows.
