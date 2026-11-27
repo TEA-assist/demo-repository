@@ -31,6 +31,7 @@
 <tr><td>5</td><td><a href="../prototype/demo-script.html">Live Demo Script</a></td><td>Presenters</td><td>4 click-paths in order: smoke check → admin → seller → shopper web → shopper mobile</td></tr>
 <tr><td>6</td><td><a href="../presentation/00-executive-summary.html">Presentation</a> (00–04)</td><td>Stakeholders</td><td>Slide deck: summary → overview → architecture → AI pipeline → roles &amp; roadmap</td></tr>
 <tr><td>7</td><td><a href="02-product-roadmap.html">Haya AI Product Roadmap</a></td><td>Product / management</td><td>Draft roadmap: 11 feature categories, development areas, business models, planning criteria</td></tr>
+<tr><td>8</td><td><a href="03-commerce-system.html">Haya Commerce System Guide</a></td><td>Product / operations / finance</td><td>Store choices, sales models, checkout, delivery, returns, settlement, fields, and live-operation boundaries</td></tr>
 </table>
 
 <h2>System at a glance</h2>
@@ -41,6 +42,9 @@
 <tr><td>Mobile</td><td>React Native 0.86, Zustand, TanStack Query, MapLibre</td><td><code>TEA-dev.apk</code> per flavor (debug-signed today)</td></tr>
 <tr><td>Infra</td><td>Single-node Docker Swarm, Caddy 2.11 (DNS-01), Grafana/Loki/Promtail, Portainer</td><td>Host <code>46.224.211.249</code>, 11 Caddy routes</td></tr>
 </table>
+
+<h2>Commerce</h2>
+<p>Haya commerce keeps catalog connectivity separate from commercial transactions. The manager-facing <a href="03-commerce-system.html">Haya Commerce System Guide</a> explains the store decisions, Haya Checkout, Store Referral, Assisted Lead / Order, store-direct and warehouse fulfillment, shipping, tax, returns, settlement, and the difference between demo capability and a live commercial launch.</p>
 
 <h2>Role summary (one paragraph each)</h2>
 <h3>Admin</h3>

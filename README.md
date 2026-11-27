@@ -11,6 +11,7 @@ Demo portal for the TEA (AI Product Finder) platform. Live stack runs on `asktea
 | Full Documentation — Master                         | [demo/docs/00-full-documentation.html](demo/docs/00-full-documentation.html)                           |
 | Full Documentation — Technical Manual               | [demo/docs/01-technical-manual.html](demo/docs/01-technical-manual.html)                               |
 | Roadmap — Haya AI Future Features & Product Roadmap | [demo/docs/02-product-roadmap.html](demo/docs/02-product-roadmap.html)                                 |
+| Commerce — Haya Commerce System Guide               | [demo/docs/03-commerce-system.html](demo/docs/03-commerce-system.html)                                 |
 | Presentation — Executive Summary                    | [demo/presentation/00-executive-summary.html](demo/presentation/00-executive-summary.html)             |
 | Presentation — Overview                             | [demo/presentation/01-overview.html](demo/presentation/01-overview.html)                               |
 | Presentation — Architecture                         | [demo/presentation/02-architecture.html](demo/presentation/02-architecture.html)                       |
@@ -31,7 +32,7 @@ All pages are plain HTML under `demo/` — open directly or via the portal [`ind
 1. Smoke check: `curl -s https://app.asktea.ai/api/v1/health | jq` (expect `status ok` + `git_sha`).
 2. Present the deck in order 00 → 04, starting at [00-executive-summary.html](demo/presentation/00-executive-summary.html).
 3. Drive the live click-paths (admin → seller → shopper web → shopper mobile) from [demo/prototype/demo-script.html](demo/prototype/demo-script.html).
-4. Hand over role guides + [Full Documentation](demo/docs/00-full-documentation.html).
+4. Hand over role guides + [Full Documentation](demo/docs/00-full-documentation.html). For product, operations, and finance discussions, use the [Commerce System Guide](demo/docs/03-commerce-system.html).
 
 Screenshots live in [`demo/assets/screenshots/`](demo/assets/screenshots/) — captured against production with Playwright (1280×800, checked against `/api/v1/health` git_sha).
 

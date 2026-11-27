@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Haya Commerce System Guide</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <p class="nav"><a href="../../index.html">Portal</a> | <a href="00-full-documentation.html">Master documentation</a> | Haya Commerce System Guide</p>
+
+  <h1>Haya Commerce System Guide</h1>
+  <p>This guide explains how Haya can move from helping a shopper discover a product to helping the right party sell it, deliver it, handle a return, and account for the outcome. It is written for product, operations, finance, and store-management teams. It explains the business purpose of each option and field without requiring technical knowledge.</p>
+
+  <div class="note"><strong>Read this first:</strong> catalog connection and commerce are separate. A connected Shopify, WooCommerce, custom-feed, or scraped catalog makes products available for discovery. It does not by itself let Haya take payment, place an order with the store, track a referral sale, or arrange delivery.</div>
+
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#overview">Commerce in plain language</a></li>
+    <li><a href="#choices">The decisions each store makes</a></li>
+    <li><a href="#models">Sales models and responsibility</a></li>
+    <li><a href="#flows">End-to-end business flows</a></li>
+    <li><a href="#fulfillment">Delivery and warehouse flows</a></li>
+    <li><a href="#fields">Configuration fields and what they do</a></li>
+    <li><a href="#lifecycle">Order, lead, return, and payout lifecycles</a></li>
+    <li><a href="#examples">Examples: problems and outcomes</a></li>
+    <li><a href="#launch">Manager launch checklist</a></li>
+    <li><a href="#demo">Demo and live-operation boundaries</a></li>
+  </ol>
+
+  <h2 id="overview">1. Commerce in plain language</h2>
+  <p>Haya can support three commercial relationships. In each one, a shopper sees a product in Haya, but the party taking payment and delivering the item may differ. Haya keeps those choices explicit so a shopper is never led to believe that a product can be bought or delivered in a way the store has not approved.</p>
+
+  <table>
+    <tr><th>Term</th><th>Plain-language meaning</th><th>Why it matters</th></tr>
+    <tr><td>Store</td><td>The merchant or source business that owns, supplies, or fulfils products.</td><td>Each store has its own commercial settings, shipping rules, policies, costs, and responsibilities.</td></tr>
+    <tr><td>Buyer</td><td>The shopper who wants the product.</td><td>The buyer sees one clear next action: checkout in Haya, buy on the store website, or request help from the store.</td></tr>
+    <tr><td>Catalog</td><td>The product information Haya can search and display: names, variants, prices, stock signals, images, and links.</td><td>A catalog is product data. It is not proof that a product is available to sell through Haya.</td></tr>
+    <tr><td>Sales model</td><td>The agreed way a shopper completes a purchase or request.</td><td>It determines who charges the buyer, owns customer support, issues documents, and earns a commission or margin.</td></tr>
+    <tr><td>Procurement</td><td>How Haya asks a source store to provide an item after a Haya Checkout sale.</td><td>It can be handled by an operations person or, only when verified, by the store's order API.</td></tr>
+    <tr><td>Fulfillment</td><td>Who receives, packs, and ships the item to the buyer.</td><td>It is independent of the sales model: a store can ship directly or send goods through a Haya warehouse.</td></tr>
+    <tr><td>Quote</td><td>A time-limited, server-calculated offer for the selected items, address, shipping, tax, and currency.</td><td>It prevents browser-entered prices, old shipping rates, or changed product details from being charged as if they were current.</td></tr>
+    <tr><td>Supplier cost</td><td>The agreed amount Haya owes the source store for an item.</td><td>It is private commercial data, separate from the buyer's retail price and not exposed publicly.</td></tr>
+    <tr><td>Commission</td><td>Haya's percentage earnings for a confirmed referral or assisted-lead sale.</td><td>It is based on the eligible item subtotal after discounts, excluding tax and shipping, and can be reversed after a refund.</td></tr>
+    <tr><td>Settlement</td><td>The controlled process of calculating and paying what is owed to a supplier.</td><td>It keeps supplier cost, delivery costs, fees, reserves, refunds, and payouts auditable rather than changing historical orders.</td></tr>
+  </table>
+
+  <h3>Who does what?</h3>
+  <table>
+    <tr><th>Party</th><th>Core responsibility</th></tr>
+    <tr><td>Haya</td><td>Product discovery, shopper experience, selected checkout/lead/referral workflow, commercial records, and the support role agreed for the sales model.</td></tr>
+    <tr><td>Store</td><td>Accurate catalog data, accepted commercial terms, supplier response, product availability, and the fulfilment or conversion evidence it has agreed to provide.</td></tr>
+    <tr><td>Haya operations</td><td>Review readiness, maintain supplier costs and policies, handle operator-assisted sourcing, monitor exceptions, and reconcile payments or payouts.</td></tr>
+    <tr><td>Buyer</td><td>Select products, provide a delivery address where needed, choose a valid shipping option, give consent for a lead, and make explicit choices when availability changes.</td></tr>
+  </table>
+
+  <h2 id="choices">2. The decisions each store makes</h2>
+  <p>A store does not choose one universal "commerce type." It makes several independent decisions. Keeping them separate avoids common mistakes, such as assuming that a catalog connection automatically makes a store checkout-ready.</p>
+
+  <table>
+    <tr><th>Decision</th><th>Question it answers</th><th>Choices in Haya</th><th>Important distinction</th></tr>
+    <tr><td>Business/store type</td><td>What kind of business is this store?</td><td>The store profile selects its category and store type for classification and discovery.</td><td>This identifies the business. It does not decide how a buyer pays or receives products.</td></tr>
+    <tr><td>Catalog source</td><td>How do product details enter Haya?</td><td>Manual entry, Shopify API, WooCommerce API, custom product feed, or assisted scraper ingestion.</td><td>This brings in product data. It is not a promise that Haya can place supplier orders.</td></tr>
+    <tr><td>Sales model</td><td>Where does the buyer complete the commercial action?</td><td>Catalog Only, Haya Checkout, Store Referral, or Assisted Lead / Order.</td><td>A store may be configured for more than one model, but a product page presents one eligible action at a time.</td></tr>
+    <tr><td>Procurement mode</td><td>How does Haya obtain an item after Haya Checkout?</td><td>Operator-assisted or verified API procurement.</td><td>API catalog reading alone is not API order writing.</td></tr>
+    <tr><td>Fulfillment method</td><td>Who physically gets the item to the buyer?</td><td>Store Direct or Haya Warehouse.</td><td>Fulfillment is separate from sales. The same commercial model can use either route when eligible.</td></tr>
+    <tr><td>Shipping method</td><td>Which delivery options can a buyer choose?</td><td>Flat/free/weight/value/quantity/local/pickup methods, or carrier-calculated options.</td><td>Each shipping method has its own matching rules, price, delivery estimate, and availability.</td></tr>
+    <tr><td>Policy and financial settings</td><td>How do tax, returns, delivery promises, supplier payout, and exceptions work?</td><td>Store-specific tax, return, delivery, and settlement policies.</td><td>These settings are snapshotted on an order so later edits do not rewrite history.</td></tr>
+  </table>
+
+  <h3>A simple mental model</h3>
+  <p>Use the sequence below when assessing a new store: first decide whether its products can be discovered; next decide how the buyer should act; then decide how the product is sourced and delivered; finally approve the commercial policies that make the process safe to operate.</p>
+  <p><code>Store profile -> Catalog -> Sales model -> Procurement -> Fulfillment -> Shipping/tax/returns -> Settlement</code></p>
+
+  <h2 id="models">3. Sales models and responsibility</h2>
+  <table>
+    <tr><th>Model</th><th>What the buyer sees</th><th>Who takes payment?</th><th>Who delivers?</th><th>How Haya earns</th></tr>
+    <tr><td>Catalog Only</td><td>Product discovery; no purchase action through Haya.</td><td>No commercial transaction in Haya.</td><td>Not applicable.</td><td>None from the transaction.</td></tr>
+    <tr><td>Haya Checkout</td><td>Add to cart and checkout in Haya.</td><td>Haya is the intended buyer-facing seller/merchant of record. The current demo payment is simulated and moves no money.</td><td>Store Direct or Haya Warehouse, according to the eligible order setting.</td><td>Retail receipt less supplier cost, payment costs, shipping, tax, and adjustments, subject to approved commercial terms.</td></tr>
+    <tr><td>Store Referral</td><td>Buy on store website.</td><td>The store/merchant.</td><td>The store/merchant.</td><td>Commission after a confirmed, eligible merchant conversion.</td></tr>
+    <tr><td>Assisted Lead / Order</td><td>Request this item.</td><td>The store/merchant after it follows up.</td><td>The store/merchant.</td><td>Commission after the store confirms an eligible conversion.</td></tr>
+  </table>
+
+  <h3>Catalog Only</h3>
+  <p>Catalog Only is the safe default for a newly connected store. Its products can appear in search and product discovery, but Haya makes no claim that it can take payment, order the item, or arrange delivery. Use this when the commercial agreement is not yet approved or the required workflow is not ready.</p>
+
+  <h3>Haya Checkout</h3>
+  <p>Haya owns the buyer-facing order experience. It groups a buyer's cart by store, calculates a quote on the server, creates one store sub-order for each source store, and keeps the buyer informed when availability changes. Haya retail price and supplier cost are distinct commercial values; supplier cost remains private.</p>
+  <p>In the current investor-demo configuration, payment is a mock Haya payment page. It records a simulated successful payment and supports the lifecycle demonstration, but it never contacts a bank, captures real money, or represents a live PSP transaction. Live payment remains gated on a selected payment provider, market/currency support, settlement approvals, and provider verification.</p>
+
+  <h3>Store Referral</h3>
+  <p>The buyer leaves Haya for a store's approved destination. Haya records a unique click identifier and campaign details, then the merchant or affiliate network must report the eventual order through an approved, signed callback. A click alone is not a sale; UTM tags alone are not sufficient proof of a sale.</p>
+  <p>Haya supports affiliate-network and direct-merchant reporting models. A store can select ArabClicks, Awin, Rakuten Advertising, impact.com, Admitad, or CJ Affiliate, or use a direct Shopify/WooCommerce merchant callback. Each store needs its own verified destination, commission rate, attribution window, and conversion method.</p>
+
+  <h3>Assisted Lead / Order</h3>
+  <p>This is a request for help, not a paid Haya order. The buyer chooses a product, variant, and quantity, provides the minimum contact and delivery details needed, and explicitly agrees to share those details with the store. The store progresses the request in its work queue, completes payment and delivery outside Haya, then records a confirmed merchant order if a commission is due.</p>
+
+  <h2 id="flows">4. End-to-end business flows</h2>
+
+  <h3>4.1 Store onboarding and product readiness</h3>
+  <ol>
+    <li>Create the store profile: name, business type, country, currency, contacts, website, address, location, and working hours.</li>
+    <li>Choose a catalog source. Add products manually or connect a supported source for product synchronization.</li>
+    <li>Review imported products, variants, images, active status, weights, and prices. Imported data remains subject to store review.</li>
+    <li>Choose Catalog Only until a commercial model is approved. A catalog connection does not change this choice.</li>
+    <li>For a commercial model, configure its required fields, capability evidence, shipping/policy settings, and readiness blockers.</li>
+    <li>Use the readiness result to decide whether the store can be enabled for a buyer action. A saved draft is not the same as a ready, launchable store.</li>
+  </ol>
+
+  <h3>4.2 Haya Checkout: buyer to delivery</h3>
+  <ol>
+    <li>The buyer adds eligible products, variants, and quantities to a Haya cart.</li>
+    <li>The buyer provides a saved or inline structured delivery address and chooses one valid shipping option for each store sub-order.</li>
+    <li>Haya validates the product, variant, availability, currency, private supplier cost, delivery address, shipping rate, tax profile, and commercial configuration. It returns a versioned, expiring quote calculated by the server.</li>
+    <li>Haya creates one parent buyer order and one store sub-order for each source store. Product details, prices, addresses, shipping, tax, delivery promise, and relevant policies are copied into the order record so later catalog edits cannot change a historical order.</li>
+    <li>For the current demo, the buyer completes a mock payment. For a live launch, this point must be a verified payment-provider authorization/capture workflow rather than a browser redirect.</li>
+    <li>Haya operations or a verified supplier-order integration asks each source store to accept or reject its sub-order. The request carries the required item, selected variant, quantity, recipient, and delivery information.</li>
+    <li>If all stores accept, each accepted sub-order proceeds to its chosen fulfillment route. The store records direct shipment details, or the warehouse receives the goods before outbound delivery.</li>
+    <li>If a store rejects or cannot supply an item, Haya pauses the parent order and asks the buyer to either continue with the available store sub-orders or cancel the entire order. Haya never silently converts a multi-store order into a partial order.</li>
+    <li>Shipment, delivery, returns, refunds, documents, supplier ledger entries, and payouts remain linked to the relevant store sub-order and its event timeline.</li>
+  </ol>
+
+  <div class="note"><strong>Multi-store rule:</strong> one cart can create several store sub-orders. A buyer still sees a single parent order, but each store has its own supplier response, shipping choice, delivery status, refund, and settlement record.</div>
+
+  <h3>4.3 Store Referral: click to commission</h3>
+  <ol>
+    <li>The buyer chooses <strong>Buy on store website</strong>.</li>
+    <li>Haya records a secure, opaque click identifier, product/store reference, timestamp, locale, and campaign details.</li>
+    <li>Haya redirects only to the store's pre-verified destination or approved affiliate tracking template. It does not accept an arbitrary destination from the browser.</li>
+    <li>The store or network preserves the Haya click identifier through its checkout and reports a signed conversion event with merchant order reference, amount, currency, status, and refund information.</li>
+    <li>Haya verifies the callback, rejects duplicates, checks the configured attribution window, and creates a pending commission entry using the store's configured rate.</li>
+    <li>After the agreed confirmation point, the commission is approved. Cancellation, chargeback, returned items, or full/partial refund reverses or adjusts the ledger entry.</li>
+  </ol>
+
+  <h3>4.4 Assisted Lead / Order: request to conversion</h3>
+  <ol>
+    <li>The buyer chooses <strong>Request this item</strong>, selects the product/variant/quantity, and supplies contact details and optional delivery context.</li>
+    <li>Before the request is shared, the buyer gives explicit consent. The consent time and product snapshot are retained with the lead.</li>
+    <li>The store sees the lead in its in-app queue and progresses it through <code>New -> Contacted -> Quoted/Accepted -> Converted / Declined / Expired</code>.</li>
+    <li>The store completes commercial payment and delivery outside Haya. The lead is never shown as a paid Haya order.</li>
+    <li>When a sale is confirmed, the store records the merchant order reference and eligible subtotal. Haya records the configured commission once; duplicate confirmations are blocked.</li>
+    <li>Unanswered active leads expire according to the configured policy (30 days by default) and cannot earn commission after expiry.</li>
+  </ol>
+
+  <h2 id="fulfillment">5. Delivery and warehouse flows</h2>
+  <p>Fulfillment answers a physical question: where does the item go after the store accepts it? The sales model describes the commercial relationship; fulfillment describes the movement of goods.</p>
+
+  <table>
+    <tr><th>Fulfillment route</th><th>Physical journey</th><th>Operational owner</th><th>When it is appropriate</th></tr>
+    <tr><td>Store Direct</td><td>Source store -> buyer</td><td>The store supplies tracking and shipment updates. Haya coordinates the buyer experience for Haya Checkout; the merchant owns it for referral/lead sales.</td><td>Initial/default route when the store can pack and ship directly.</td></tr>
+    <tr><td>Haya Warehouse</td><td>Source store -> Haya warehouse -> buyer</td><td>Haya operations receives, inspects, records inventory movement, picks/packs, and ships outbound.</td><td>Only when an active default warehouse, domestic route, delivery option, and operations process are configured.</td></tr>
+  </table>
+
+  <h3>5.1 Store-direct fulfillment</h3>
+  <ol>
+    <li>Store accepts its supplier sub-order.</li>
+    <li>Store packs the item and records carrier, tracking number or tracking URL, and shipment status.</li>
+    <li>The buyer can see shipment progress: created, in transit, delivered, failed, or returned.</li>
+    <li>Delivery confirmation triggers the eligible downstream processes, such as settlement availability and return eligibility.</li>
+    <li>Delivery exceptions are recorded for operations rather than hidden. The responsibility for buyer support follows the sales model.</li>
+  </ol>
+
+  <h3>5.2 Haya warehouse fulfillment</h3>
+  <ol>
+    <li>Checkout creates an inbound transfer for the store sub-order and the expected quantities.</li>
+    <li>The store sends goods to the approved Haya warehouse and records supplier-to-warehouse tracking.</li>
+    <li>At receiving, Haya operations records the quantity received, accepted, damaged, or short for every item.</li>
+    <li>Accepted units create an auditable inventory receipt. Damaged or missing units remain exceptions; an outbound shipment is blocked until the buyer decision is resolved.</li>
+    <li>If only some goods are acceptable, the buyer can approve shipment of available items with the difference refunded, or cancel that store sub-order. The buyer is not silently sent fewer items.</li>
+    <li>Haya creates an outbound shipment and tracks delivery to the buyer. Returns can later be restocked, held as damaged, returned to supplier, or disposed of with an audit record.</li>
+  </ol>
+
+  <h3>5.3 Shipping methods in everyday terms</h3>
+  <table>
+    <tr><th>Method</th><th>Typical use</th><th>How its price can be controlled</th></tr>
+    <tr><td>Flat rate</td><td>One clear delivery charge.</td><td>Set a fixed amount for an eligible destination/range.</td></tr>
+    <tr><td>Free shipping</td><td>Promotion or minimum-spend benefit.</td><td>Make the rate free, optionally only above a cart subtotal.</td></tr>
+    <tr><td>Weight based</td><td>Heavier parcels should cost more.</td><td>Match product/variant weight bands in grams.</td></tr>
+    <tr><td>Order value</td><td>Delivery price depends on the order subtotal.</td><td>Set a minimum and/or maximum order value for a rule.</td></tr>
+    <tr><td>Quantity based</td><td>Delivery changes with item count.</td><td>Match a minimum and/or maximum quantity.</td></tr>
+    <tr><td>Local delivery</td><td>City, neighborhood, or same-day delivery.</td><td>Limit the rule to selected countries, regions, or cities and set a delivery-day estimate.</td></tr>
+    <tr><td>Pickup</td><td>Buyer collects from the store.</td><td>Offer a zero or defined price when pickup is operationally available.</td></tr>
+    <tr><td>Carrier calculated</td><td>Current carrier options are requested for the exact parcel and destination.</td><td>Requires an active shipping profile, product weights, an enabled carrier connection, and an unexpired rate quote.</td></tr>
+  </table>
+
+  <p>When active shipping methods exist, a buyer must provide an address that matches at least one rate rule. Haya blocks checkout rather than inventing a shipping price. When no shipping methods exist, the system currently retains a zero-shipping compatibility path; this should be treated as an explicit commercial decision before a live launch.</p>
+
+  <h2 id="fields">6. Configuration fields and what they do</h2>
+  <p>The following field reference describes the business meaning of the settings used in the current commerce system. A setting should be changed by the person who owns the corresponding commercial or operational decision, not merely by the person who has access to the screen.</p>
+
+  <h3>6.1 Store profile and catalog fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Store name</td><td>The buyer-facing and operational identity of the source business.</td><td>Use the legal/trading name that support and operations can recognize.</td></tr>
+    <tr><td>Category and store type</td><td>Classifies the business for Haya's catalog and management views.</td><td>Select the business classification; it does not turn on commerce.</td></tr>
+    <tr><td>Country and price currency</td><td>Sets the store's market context and price denomination.</td><td>Confirm that catalog prices, shipping rules, supplier costs, and payout terms use the intended currency.</td></tr>
+    <tr><td>Phone, website, address, location, working hours</td><td>Provides contact, pickup, operations, and store-discovery information.</td><td>Keep them current; they may be needed for lead contact, pickup, or issue handling.</td></tr>
+    <tr><td>Catalog connection kind/provider</td><td>States whether product data is manual, API, scraper, or custom feed, and which provider supplies it.</td><td>Choose the source that the store has authorized. Do not use it as evidence of ordering or fulfillment capability.</td></tr>
+    <tr><td>Sync mode and schedule</td><td>Controls when catalog data is refreshed.</td><td>Match it to the source's reliability and the business need for price/stock freshness.</td></tr>
+    <tr><td>Product/variant status, price, stock, weight</td><td>Controls what can be shown, selected, priced, and shipped.</td><td>Review accuracy. Weight is particularly important for carrier-calculated delivery.</td></tr>
+  </table>
+
+  <h3>6.2 Sales and fulfillment profile</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Sales models</td><td>Enables the store to be evaluated for Haya Checkout, Store Referral, and/or Assisted Lead. Selecting none leaves it Catalog Only.</td><td>Select only the models supported by the commercial agreement and operating process.</td></tr>
+    <tr><td>Procurement mode</td><td>For Haya Checkout, chooses operator-assisted sourcing or verified supplier API ordering.</td><td>Choose API only after the source store has approved the permissions and order-write capability is verified.</td></tr>
+    <tr><td>Fulfillment method</td><td>Sets the default route: Store Direct or Haya Warehouse.</td><td>Match it to the actual logistics agreement and capacity.</td></tr>
+    <tr><td>Allow fulfillment override</td><td>Allows an eligible individual order to use a different route from the store default.</td><td>Enable only if operations can safely make and audit that exception.</td></tr>
+    <tr><td>Commission rate</td><td>The percentage used for referral and assisted-lead commission entries.</td><td>Enter the agreed commercial percentage, not a marketing estimate.</td></tr>
+    <tr><td>Attribution window (days)</td><td>How long after a Haya referral click a qualifying merchant conversion can be credited.</td><td>Default is 30 days; align with the affiliate or merchant agreement.</td></tr>
+    <tr><td>Supplier response timeout (hours)</td><td>The response deadline copied to a supplier sub-order after payment moves it to supplier pending.</td><td>Default is 24 hours. Choose a realistic supplier SLA. Overdue orders are escalated; they are not automatically rejected.</td></tr>
+    <tr><td>Verified capabilities</td><td>Records that a capability has been checked: supplier order write/status events, fulfillment updates, conversion events, lead notifications, referral destination, or affiliate callback mapping.</td><td>Mark only after evidence is verified. Selecting a checkbox is not a substitute for a signed test or operational review.</td></tr>
+  </table>
+
+  <h3>6.3 Referral settings</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Referral method</td><td>Chooses Affiliate Network or Direct Merchant reporting.</td><td>Choose the method the merchant contract and reporting capability support.</td></tr>
+    <tr><td>Affiliate network</td><td>Identifies the selected network: ArabClicks, Awin, Rakuten Advertising, impact.com, Admitad, or CJ Affiliate.</td><td>Use the merchant's actual partner/network account. Some provider mappings require account-specific verification.</td></tr>
+    <tr><td>Referral merchant</td><td>Identifies the merchant configuration used for the store.</td><td>Selecting a merchant is configuration only; it does not prove that merchant has authorized Haya.</td></tr>
+    <tr><td>Merchant platform</td><td>For direct reporting, identifies Shopify or WooCommerce.</td><td>Use only when the merchant can preserve the Haya click ID and send verified order callbacks.</td></tr>
+    <tr><td>Verified destination URL</td><td>The approved store URL to which Haya may redirect a buyer.</td><td>Must be a trusted HTTPS destination. This prevents unsafe or arbitrary redirects.</td></tr>
+    <tr><td>Affiliate tracking URL template</td><td>The network-specific referral link, including the Haya click identifier placeholder where required.</td><td>Validate it in the provider sandbox before enabling referral traffic.</td></tr>
+    <tr><td>Callback secret</td><td>Private credential used to authenticate conversion reports.</td><td>Store it securely and rotate it according to the partner agreement. The application does not return it after saving.</td></tr>
+  </table>
+
+  <h3>6.4 Supplier costs and supplier order fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Product/variant supplier cost</td><td>The protected amount Haya owes the store for a specific item or variant.</td><td>Maintain the agreed cost and currency before enabling checkout. It is snapshotted on the order.</td></tr>
+    <tr><td>Supplier shipping cost</td><td>The cost charged by the supplier to move goods, captured during supplier acceptance.</td><td>Keep it separate from the buyer's shipping charge so margin and settlement are accurate.</td></tr>
+    <tr><td>Supplier reference / operator note</td><td>Links an operational purchase or manual action to the Haya store sub-order.</td><td>Use a recognizable source reference and concise exception context.</td></tr>
+    <tr><td>Supplier accept/reject reason</td><td>Records whether the store can supply the order and why it cannot.</td><td>Require a useful rejection reason so operations can explain the buyer's options.</td></tr>
+  </table>
+
+  <h3>6.5 Buyer address and delivery fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Why it matters</th></tr>
+    <tr><td>Recipient name and phone</td><td>Identifies the person receiving a shipment.</td><td>Needed for delivery handoff and carrier contact.</td></tr>
+    <tr><td>Country, region, city, district</td><td>Defines the delivery zone.</td><td>Determines whether a shipping rule or warehouse route is available.</td></tr>
+    <tr><td>Street, building, floor/apartment, postal code, landmark</td><td>Provides a usable delivery location.</td><td>Reduces failed delivery and may be required by a carrier or market.</td></tr>
+    <tr><td>Delivery notes and coordinates</td><td>Provides extra handoff instructions or location precision.</td><td>Use only when useful for the delivery service and handle as buyer personal data.</td></tr>
+    <tr><td>Saved/default address</td><td>Lets a buyer reuse a structured address.</td><td>The chosen address is copied into the quote and order; later account edits do not change a placed order.</td></tr>
+  </table>
+
+  <h3>6.6 Shipping-method and rate fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Code and name</td><td>Stable internal identifier and buyer-facing name for a shipping method.</td><td>Use a simple, recognizable service name, such as Standard Delivery or Store Pickup.</td></tr>
+    <tr><td>Method type</td><td>Defines how the method is interpreted: flat, free, weight, value, quantity, local, pickup, or carrier calculated.</td><td>Choose the model that reflects the commercial delivery offer.</td></tr>
+    <tr><td>Carrier and provider</td><td>Records the carrier name and, for calculated delivery, the provider such as Easyship or the demo carrier.</td><td>Do not treat a provider reference as proof of live service coverage.</td></tr>
+    <tr><td>Active/default/sort order</td><td>Controls whether a method is offered, which matching option is selected first, and display order.</td><td>Keep only supportable options active. The default should be the normal choice, not necessarily the cheapest.</td></tr>
+    <tr><td>Delivery-day range</td><td>Shows the estimated minimum and maximum transit days.</td><td>Set realistic customer-facing expectations; an estimate is not a legal promise unless policy says so.</td></tr>
+    <tr><td>Destination countries, regions, cities</td><td>Limits a rate rule to eligible zones.</td><td>Define the actual service area; an empty restriction means the rule is broadly applicable.</td></tr>
+    <tr><td>Minimum/maximum subtotal, weight, quantity</td><td>Defines when a rate rule applies.</td><td>Use only the conditions needed for the business rule. Weight is measured in grams.</td></tr>
+    <tr><td>Price, currency, free flag</td><td>Sets a paid or free delivery option.</td><td>Enter the buyer-facing delivery charge in the correct currency.</td></tr>
+    <tr><td>Priority and estimated days on rate</td><td>Breaks ties between matching rates and can refine the method-level delivery estimate.</td><td>Give the most specific/business-correct rule the higher priority.</td></tr>
+  </table>
+
+  <h3>6.7 Carrier shipping profile and parcel fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Origin name/company/contact</td><td>The ship-from identity shown to a carrier.</td><td>Use the true dispatch location and operations contact.</td></tr>
+    <tr><td>Origin street, city, region, postal code, country</td><td>The structured ship-from address.</td><td>Keep it accurate; carrier rates and labels depend on it.</td></tr>
+    <tr><td>Package code and name</td><td>Identifies a reusable parcel preset.</td><td>Create names that operations can select reliably, such as Small Box or Garment Bag.</td></tr>
+    <tr><td>Length, width, height</td><td>Parcel dimensions in centimeters.</td><td>Use packed dimensions, not only product dimensions.</td></tr>
+    <tr><td>Tare weight and maximum weight</td><td>The empty-package weight and optional safe parcel limit in grams.</td><td>Needed for correct rate shopping and safe packing.</td></tr>
+    <tr><td>Default package and active status</td><td>Selects the standard preset and turns the profile on for live carrier rate/label use.</td><td>Activate only after origin and parcel details have been checked.</td></tr>
+  </table>
+
+  <h3>6.8 Tax and document fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Status</td><td>Draft, Active, or Disabled tax profile.</td><td>Do not activate until finance/legal has reviewed the issuer and applicable rules.</td></tr>
+    <tr><td>Issuer scope</td><td>Identifies whether the store, platform, or merchant is the issuer in the selected context.</td><td>Align with the seller-of-record and legal entity decision.</td></tr>
+    <tr><td>Legal/trade name, registration numbers, legal address</td><td>Issuer details used on documents.</td><td>Use approved legal information, not a marketing label.</td></tr>
+    <tr><td>Invoice prefix and sequence</td><td>Creates a controlled numbering series for issued documents.</td><td>Coordinate with finance so the sequence meets market and accounting requirements.</td></tr>
+    <tr><td>Tax inclusive</td><td>States whether displayed item prices already include tax.</td><td>Choose the market-appropriate presentation; inclusive prices must not have tax added again.</td></tr>
+    <tr><td>Shipping taxable</td><td>Controls whether shipping participates in tax calculation.</td><td>Use the reviewed jurisdiction policy.</td></tr>
+    <tr><td>Tax rule: country/region/city</td><td>Defines where a tax rule applies.</td><td>Use the right jurisdiction scope; do not assume one regional rate.</td></tr>
+    <tr><td>Tax category and component</td><td>Identifies the product treatment and tax type, such as VAT.</td><td>Coordinate category assignment and rates with finance/legal.</td></tr>
+    <tr><td>Rate, compound flag, priority, effective dates</td><td>Controls the calculation and when the rule is usable.</td><td>Use reviewed rates and dates. The system keeps tax at zero without an active applicable profile.</td></tr>
+  </table>
+
+  <p>Receipts, invoices, and credit notes are generated from an immutable document snapshot. A Haya Checkout sale needs an approved issuer/tax profile before a tax invoice can be issued. For Store Referral and Assisted Lead, the merchant issues the buyer's sales document; Haya records attribution and commission evidence.</p>
+
+  <h3>6.9 Return-policy fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Status and country scope</td><td>Activates a policy globally or for selected destination countries.</td><td>Use a country-specific policy where terms differ. The system prefers a matching country policy, then a global policy.</td></tr>
+    <tr><td>Return window days</td><td>How long after eligible delivery a buyer may request a return.</td><td>Set the approved consumer-policy timeframe.</td></tr>
+    <tr><td>Return-shipping payer</td><td>States whether the customer, store, or Haya pays return delivery.</td><td>Make the commercial owner explicit before launch.</td></tr>
+    <tr><td>Original shipping refunded</td><td>Controls whether the initial buyer delivery charge is refunded.</td><td>Decide separately from the return-shipping payer.</td></tr>
+    <tr><td>Restocking fee</td><td>Percentage retained from an eligible refund.</td><td>Use only when legally/commercially approved and clearly communicated.</td></tr>
+    <tr><td>Requires approval</td><td>Requires a store/admin decision before the buyer sends goods back.</td><td>Enable when inspection, category rules, or fraud controls require it.</td></tr>
+    <tr><td>Exchange allowed</td><td>Records whether the policy permits exchange as a resolution.</td><td>The current system captures the choice; exchange fulfillment needs its own operational handling.</td></tr>
+    <tr><td>Original packaging, tags, condition</td><td>Eligibility conditions for the returned item.</td><td>Set only conditions that the store can consistently inspect and enforce.</td></tr>
+    <tr><td>Return method and maximum items</td><td>Offers courier, drop-off, or pickup and limits one return request.</td><td>Choose the logistics path and workload the store can support.</td></tr>
+    <tr><td>Internal note</td><td>Private operational guidance for the policy.</td><td>Do not put buyer-facing terms or unnecessary personal data here.</td></tr>
+  </table>
+
+  <h3>6.10 Settlement-policy fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Status</td><td>Draft, Active, or Disabled supplier settlement policy.</td><td>Keep draft until commercial/finance approval is complete.</td></tr>
+    <tr><td>Trigger</td><td>Defines the business event on which settlement becomes relevant; the current policy is after delivery.</td><td>Align with supplier terms and return-risk policy.</td></tr>
+    <tr><td>Hold days</td><td>Number of days after delivery before funds are available for payout.</td><td>Balance supplier cash flow with return/chargeback exposure.</td></tr>
+    <tr><td>Platform fee</td><td>The fee percentage recorded in the supplier settlement ledger.</td><td>Use the contracted fee, separately from referral commission.</td></tr>
+    <tr><td>Reserve and reserve-release days</td><td>Percentage held back and when it becomes available.</td><td>Use only with an approved risk/reserve policy.</td></tr>
+    <tr><td>Refund recovery enabled</td><td>Allows an eligible completed return/refund to create a recovery entry against supplier payables.</td><td>Confirm that recovery rules are contractually supported.</td></tr>
+    <tr><td>Minimum payout and currency</td><td>Sets the smallest payable amount and payout denomination.</td><td>Do not net different currencies; agree currency and threshold with the supplier.</td></tr>
+  </table>
+
+  <h3>6.11 Warehouse fields</h3>
+  <table>
+    <tr><th>Field</th><th>Use</th><th>Manager decision</th></tr>
+    <tr><td>Warehouse code and bilingual name</td><td>Identifies an operating location in system and buyer-facing contexts.</td><td>Use a stable code and approved English/Arabic naming.</td></tr>
+    <tr><td>Country, city, structured bilingual address</td><td>Defines the physical receiving/dispatch site and eligible domestic route.</td><td>Enter the verified operating address; it cannot be a placeholder.</td></tr>
+    <tr><td>Operational contacts</td><td>Name, Arabic name, phone, and optional email for warehouse coordination.</td><td>Active/default warehouses require required contacts.</td></tr>
+    <tr><td>Currency and outbound shipping fee</td><td>Sets the warehouse commercial context and buyer-facing outbound fee.</td><td>Use the actual domestic warehouse currency/fee; do not invent FX.</td></tr>
+    <tr><td>Inbound/outbound handling and delivery days</td><td>Contributes to the buyer delivery estimate.</td><td>Set realistic operations SLAs.</td></tr>
+    <tr><td>Active/default</td><td>Turns the warehouse on and selects the single default warehouse.</td><td>Make a warehouse default only after facilities, staff, return handling, and delivery routes are ready.</td></tr>
+  </table>
+
+  <h2 id="lifecycle">7. Lifecycle, records, and automatic safeguards</h2>
+
+  <h3>7.1 Haya Checkout order lifecycle</h3>
+  <p>The buyer sees a parent order. Operations works with one store sub-order per source store. Each transition creates an event record, which keeps the decision trail visible.</p>
+  <p><code>Quote -> Order created -> Payment recorded -> Supplier pending -> Supplier accepted / rejected -> Processing -> Shipped -> Delivered -> Return/refund if needed</code></p>
+  <ul>
+    <li><strong>Supplier rejected:</strong> the parent order becomes <code>buyer_decision_required</code>. The buyer chooses continue with available items or cancel all; no silent partial fulfillment.</li>
+    <li><strong>Buyer-decision deadline:</strong> default 48 hours. On expiry, the automated process cancels the order and refunds mock transactions. Live provider-specific void/refund behavior still needs provider implementation.</li>
+    <li><strong>Supplier-response deadline:</strong> default 24 hours per store. The system escalates the overdue sub-order to Haya operations and can queue SMS alerts for active admins with verified phone numbers; it does not auto-reject the order.</li>
+    <li><strong>Order snapshots:</strong> product, variant, supplier cost, price, address, shipping method, tax, and policy values are copied to the order to preserve what was agreed at purchase time.</li>
+  </ul>
+
+  <h3>7.2 Returns and refunds</h3>
+  <p><code>Requested -> Approved / Rejected -> In transit -> Received -> Inspected -> Refunded / Replaced / Declined -> Closed</code></p>
+  <p>Returns require a delivered order and an active matching policy. The system checks that a buyer cannot return more than the purchased quantity. A completed return can calculate item and tax refund, original shipping refund, restocking fee, and customer-paid return shipping. It caps refunds at the remaining payment balance and creates a credit note from the refund record.</p>
+
+  <h3>7.3 Supplier settlement</h3>
+  <p>Settlement is not a modification of an old order. It is an append-only ledger of what Haya owes or recovers. After eligible delivery, the ledger can record supplier payable, supplier shipping, platform fee, reserve hold, reserve release, refund recovery, and approved manual adjustment. Payouts claim available lines, enforce the minimum payout, and record an external payment reference when marked paid.</p>
+  <p><code>Draft -> Pending approval -> Approved -> Scheduled -> Paid -> Closed</code></p>
+
+  <h3>7.4 Assisted leads and referrals</h3>
+  <p>Leads carry a separate timeline and are never payment orders. Referrals carry click and conversion records. Both commission paths use append-only entries so a confirmed conversion, cancellation, refund, or chargeback can be explained later without overwriting the original evidence.</p>
+
+  <h2 id="examples">8. Examples: problems and outcomes</h2>
+
+  <h3>Example 1: two-store checkout and one unavailable item</h3>
+  <p><strong>Situation:</strong> A buyer adds a dress from Store A and shoes from Store B. Both items create their own store sub-order under one parent order. Store A accepts, but Store B rejects because the selected shoe size is unavailable.</p>
+  <p><strong>What Haya does:</strong> Haya does not ship the dress silently. It presents the buyer with two clear choices: continue with Store A's accepted item at the revised total, or cancel the entire order. If the buyer does not respond before the configured deadline, the order is cancelled rather than partially fulfilled without consent.</p>
+  <p><strong>Why it matters:</strong> The buyer controls the changed purchase. Operations has an event trail showing Store B's reason, the buyer decision, and any refund.</p>
+
+  <h3>Example 2: referral click without a confirmed sale</h3>
+  <p><strong>Situation:</strong> A shopper clicks Buy on store website, visits the merchant, but never completes checkout.</p>
+  <p><strong>What Haya does:</strong> It records the click and campaign data but creates no commission. A commission appears only when the configured merchant or network sends a verified, eligible conversion event within the attribution window.</p>
+  <p><strong>Why it matters:</strong> Marketing clicks are not treated as revenue. Finance can distinguish traffic from confirmed commissionable sales.</p>
+
+  <h3>Example 3: address has no delivery option</h3>
+  <p><strong>Situation:</strong> A buyer selects a city outside the store's configured shipping zones.</p>
+  <p><strong>What Haya does:</strong> It shows no matching shipping option and blocks checkout for that store sub-order rather than charging an invented delivery price. Operations can add a valid rate rule or leave the destination unsupported.</p>
+  <p><strong>Why it matters:</strong> Delivery commitments are based on rules the store can actually fulfill.</p>
+
+  <h3>Example 4: return after delivery</h3>
+  <p><strong>Situation:</strong> A buyer requests a return within the policy window. The policy says the store pays return shipping, original buyer shipping is refundable, and a 5% restocking fee applies.</p>
+  <p><strong>What Haya does:</strong> The store/admin approves, receives, and completes the return. The refund calculation applies the policy snapshot, caps the total at the remaining payment balance, records any supplier recovery separately, and issues a linked credit note.</p>
+  <p><strong>Why it matters:</strong> The outcome follows the policy that applied when the order was placed, not a later edited policy.</p>
+
+  <h3>Example 5: warehouse receives damaged units</h3>
+  <p><strong>Situation:</strong> A store sends five items to Haya's warehouse. Three are accepted, one is damaged, and one is missing.</p>
+  <p><strong>What Haya does:</strong> Warehouse staff record every item quantity and exception. Outbound shipping stays blocked until the buyer chooses to accept the available quantity with a refund for the difference, or cancel that store sub-order.</p>
+  <p><strong>Why it matters:</strong> Inventory and financial records show the physical truth, and the buyer decides how to proceed.</p>
+
+  <h2 id="launch">9. Manager launch checklist</h2>
+  <p>Use this checklist before enabling a store for any buyer action beyond Catalog Only.</p>
+  <ol>
+    <li>Confirm the store identity, country, currency, contacts, and catalog ownership.</li>
+    <li>Confirm that product prices, variants, stock signals, images, weights, and source links are current enough for the intended action.</li>
+    <li>Choose the sales model based on the commercial agreement, not on the catalog provider.</li>
+    <li>For Haya Checkout, approve supplier costs, procurement mode, supplier response SLA, fulfillment route, shipping rules, delivery policy, tax issuer/rules, return policy, and settlement terms.</li>
+    <li>For Store Referral, verify the destination, partner/network contract, click-ID propagation, signed callback, commission rate, and attribution window with a sandbox conversion.</li>
+    <li>For Assisted Lead, confirm consent wording, the in-app follow-up owner, lead response process, conversion reporting owner, and expiry policy.</li>
+    <li>For Store Direct, confirm packing, tracking updates, dispatch SLA, delivery-exception owner, and return handoff.</li>
+    <li>For Haya Warehouse, confirm the active default warehouse, receiving staff, inspection process, domestic route, outbound delivery, inventory handling, and return disposition process.</li>
+    <li>Review readiness blockers rather than bypassing them. A missing provider, supplier cost, destination, callback, or verified capability is a business risk signal.</li>
+    <li>Run a controlled end-to-end test before exposing the buyer action: product selection, quote, payment mode, supplier response, delivery, return, document, and financial record.</li>
+  </ol>
+
+  <h2 id="demo">10. Demo and live-operation boundaries</h2>
+  <table>
+    <tr><th>Area</th><th>What the current system demonstrates</th><th>What is still required for live commercial operation</th></tr>
+    <tr><td>Payments</td><td>Internal mock payment records a simulated paid order and supports refund lifecycle demonstrations.</td><td>Selected PSP, approved countries/currencies, authorization/capture/refund/webhook reconciliation, and real finance controls.</td></tr>
+    <tr><td>Supplier ordering</td><td>Operator queues are available; Shopify/WooCommerce order adapters exist for verified non-demo paid orders.</td><td>Store-specific approval, permissions, sandbox verification, contract terms, and operational support.</td></tr>
+    <tr><td>Referral</td><td>Click capture, signed conversion processing, commission ledger, and configured provider mappings are available.</td><td>Partner account setup and sandbox confirmation for each store/provider combination.</td></tr>
+    <tr><td>Shipping</td><td>Static rules, addresses, quotes, tracking, delivery status, demo carrier, and an Easyship pilot adapter are available.</td><td>Verified carrier account/routes, live rates/labels, operational carrier support, and tracking webhooks.</td></tr>
+    <tr><td>Tax/documents</td><td>Configurable profiles, snapshots, receipts/invoices/credit notes, and private PDF delivery are available.</td><td>Legal entity, jurisdiction, rate, language, invoice, and filing approval for each market.</td></tr>
+    <tr><td>Returns and settlement</td><td>Policy-driven returns, partial mock refunds, recovery/reserve ledger entries, statements, and payout records are available.</td><td>Approved consumer policy, payout rail, finance controls, supplier contracts, and reconciliation process.</td></tr>
+    <tr><td>Demo carrier</td><td>Deterministic demo quotes, watermarked label PDFs, fictional tracking, and simulated delivery statuses.</td><td>It must not be used as a real shipment. A label is marked <code>DEMO - NOT VALID FOR SHIPPING</code>.</td></tr>
+  </table>
+
+  <div class="note"><strong>Operational rule:</strong> do not advertise a commerce option as live merely because its configuration screen exists or a catalog is connected. Enable a buyer action only after its readiness blockers, commercial owner, provider verification, and operating runbook are complete.</div>
+
+  <h2>Related documents</h2>
+  <ul>
+    <li><a href="00-full-documentation.html">Master documentation</a> for the full product overview.</li>
+    <li><a href="02-product-roadmap.html">Product roadmap</a> for planned capability investment.</li>
+    <li><a href="haya-commerce-implementation-plan.md">Commerce implementation plan</a> for the technical source of truth, milestones, API design, and release requirements.</li>
+  </ul>
+
+  <footer>Haya Commerce System Guide | Manager-facing documentation | Updated from the current commerce implementation plan and application configuration.</footer>
+  <p class="nav"><a href="00-full-documentation.html">Master documentation</a> | <a href="02-product-roadmap.html">Roadmap</a> | <a href="../../index.html">Portal</a></p>
+</body>
+</html>
