@@ -1,0 +1,33 @@
+flowchart TD
+    Event[Order or integration exception] --> Type{Exception type}
+
+    Type --> SupplierReject[Supplier rejects or cannot supply]
+    SupplierReject --> BuyerChoice[Buyer chooses available items or cancels all]
+    BuyerChoice --> Record[Record event and financial adjustment]
+
+    Type --> NoRate[No valid shipping rate or expired quote]
+    NoRate --> BlockCheckout[Block checkout\nDo not invent a delivery price]
+    BlockCheckout --> UpdateAddress[Buyer changes address or shipping option]
+
+    Type --> WarehouseIssue[Warehouse damage, shortage, or mismatch]
+    WarehouseIssue --> HoldOutbound[Hold outbound shipment]
+    HoldOutbound --> WarehouseChoice[Buyer approves available items or cancels]
+    WarehouseChoice --> Record
+
+    Type --> ProviderIssue[Provider credentials, callback, or carrier route unverified]
+    ProviderIssue --> GateAction[Keep buyer action gated or use approved demo path]
+    GateAction --> OpsReview[Operations review and evidence collection]
+
+    Type --> DeliveryIssue[Delivery failed or returned]
+    DeliveryIssue --> Support[Operations records status and support path]
+    Support --> ReturnPath[Return, reship, or refund decision]
+    ReturnPath --> Record
+
+    classDef buyer fill:#ffe9d9,stroke:#b45309,color:#4a2600,stroke-width:2px;
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef ops fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Event,Record,NoRate,BlockCheckout,ProviderIssue,GateAction,DeliveryIssue,Support,ReturnPath platform;
+    class SupplierReject,WarehouseIssue,HoldOutbound,OpsReview ops;
+    class BuyerChoice,UpdateAddress,WarehouseChoice buyer;
+    class Type decision;

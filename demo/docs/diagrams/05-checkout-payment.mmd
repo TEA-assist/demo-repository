@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    actor Buyer
+    participant Haya as Haya Checkout
+    participant Quote as Quote service
+    participant Payment as Mock payment (Simulated)
+    participant Supplier as Store / supplier
+    participant Ops as Haya operations
+
+    Buyer->>Haya: Confirm cart, address, and shipping choice
+    Haya->>Quote: Validate eligible products and calculate quote
+    Quote-->>Haya: Versioned, expiring quote
+    alt Quote is valid
+        Haya->>Payment: Start current demo payment
+        Note right of Payment: Simulated success only\nNo bank or PSP transaction
+        Payment-->>Haya: Simulated payment recorded
+        Haya->>Haya: Create parent order and store sub-orders
+        Haya->>Supplier: Send supplier sub-order
+        alt Supplier accepts
+            Supplier-->>Haya: Accepted with fulfillment route
+            Haya->>Ops: Queue operational follow-up
+            Haya-->>Buyer: Order and shipment updates
+        else Supplier rejects or cannot supply
+            Supplier-->>Haya: Rejection reason
+            Haya-->>Buyer: Choose available items or cancel all
+        end
+    else Quote is stale or invalid
+        Haya-->>Buyer: Refresh cart or shipping selection
+    end
+    Note over Haya,Payment: Live payment requires PSP selection, credentials,\nmarket approval, and verified authorization/capture/refund/webhooks.

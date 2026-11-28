@@ -2,8 +2,15 @@
   "name": "demo-repo",
   "version": "0.2.0",
   "description": "A sample package.json",
+  "scripts": {
+    "validate:mermaid": "node demo/scripts/validate-mermaid.mjs"
+  },
   "dependencies": {
     "@primer/css": "17.0.1"
+  },
+  "devDependencies": {
+    "jsdom": "27.4.0",
+    "mermaid": "12.4.0"
   },
   "license": "MIT"
 }

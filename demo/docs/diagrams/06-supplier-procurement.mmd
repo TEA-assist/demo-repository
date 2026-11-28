@@ -1,0 +1,24 @@
+stateDiagram-v2
+    [*] --> SupplierPending: Paid checkout store sub-order
+    SupplierPending --> OperatorAssisted: Current operator-assisted route
+    SupplierPending --> VerifiedAPI: Only after verified order-write capability
+    SupplierPending --> Escalated: Supplier response SLA overdue
+    Escalated --> OperatorAssisted: Operations follows up
+
+    OperatorAssisted --> Accepted: Supplier accepts
+    OperatorAssisted --> Rejected: Supplier rejects with reason
+    VerifiedAPI --> Accepted: Verified API acceptance
+    VerifiedAPI --> Rejected: Verified API rejection
+
+    Accepted --> Fulfillment: Chosen route starts
+    Rejected --> BuyerDecision: Buyer decision required
+    BuyerDecision --> ContinueAvailable: Buyer accepts available sub-orders
+    BuyerDecision --> CancelAll: Buyer cancels order
+    ContinueAvailable --> Fulfillment
+    CancelAll --> [*]
+    Fulfillment --> [*]
+
+    note right of VerifiedAPI
+      Catalog API access does not prove
+      supplier order-write permission.
+    end note

@@ -1,0 +1,36 @@
+flowchart TD
+    Store[Store profile] --> Source{Catalog source}
+    Source --> Manual[Manual entry]
+    Source --> API[Shopify, WooCommerce, or custom API]
+    Source --> Feed[Product feed]
+    Source --> Import[Assisted scraper import]
+
+    Manual --> Review[Review products, variants, prices, stock, weights]
+    API --> Review
+    Feed --> Review
+    Import --> Review
+    Review --> Search[Discovery-ready catalog]
+
+    Search -. independent choices .-> Sales{Sales model}
+    Sales --> Checkout[Haya Checkout]
+    Sales --> Referral[Store Referral]
+    Sales --> Lead[Assisted Lead / Order]
+    Sales --> CatalogOnly[Catalog Only]
+
+    Checkout --> Terms[Supplier cost, procurement, fulfillment, shipping, tax, returns, settlement]
+    Referral --> ReferralTerms[Verified destination, callback, commission, attribution]
+    Lead --> LeadTerms[Consent, follow-up owner, conversion reporting]
+    Terms --> Ready{Readiness review}
+    ReferralTerms --> Ready
+    LeadTerms --> Ready
+    Ready --> Enabled[Enable approved buyer action]
+    Ready --> Blocked[Keep Catalog Only\nuntil blockers are resolved]
+
+    classDef store fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px;
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef ops fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Store,Manual,API,Feed,Import store;
+    class Review,Search,Checkout,Referral,Lead,CatalogOnly,Enabled,Blocked platform;
+    class Terms,ReferralTerms,LeadTerms ops;
+    class Source,Sales,Ready decision;

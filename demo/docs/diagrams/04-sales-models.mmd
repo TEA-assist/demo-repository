@@ -1,0 +1,31 @@
+flowchart TD
+    Buyer[Buyer finds a product] --> Choice{Eligible buyer action}
+
+    Choice --> CatalogOnly[Catalog Only]
+    CatalogOnly --> Discover[Browse and discover\nNo transaction in Haya]
+
+    Choice --> Checkout[Haya Checkout]
+    Checkout --> HayaOrder[Haya creates parent and store sub-orders]
+    HayaOrder --> Payment[Mock payment today\nSimulated, no money movement]
+    Payment --> Delivery[Store Direct or Haya Warehouse]
+    Delivery --> SupplierSettle[Supplier settlement after eligible delivery]
+
+    Choice --> Referral[Store Referral]
+    Referral --> Redirect[Redirect to verified store destination]
+    Redirect --> MerchantSale[Merchant takes payment and fulfills]
+    MerchantSale --> ReferralCommission[Commission after verified conversion]
+
+    Choice --> Lead[Assisted Lead / Order]
+    Lead --> Consent[Buyer gives consent to share request]
+    Consent --> StoreFollowup[Store follows up and sells outside Haya]
+    StoreFollowup --> LeadCommission[Commission after confirmed conversion]
+
+    classDef buyer fill:#ffe9d9,stroke:#b45309,color:#4a2600,stroke-width:2px;
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef store fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px;
+    classDef ops fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Buyer buyer;
+    class CatalogOnly,Discover,Checkout,HayaOrder,Payment,Delivery,SupplierSettle,Referral,Redirect,ReferralCommission,Lead,Consent,LeadCommission platform;
+    class MerchantSale,StoreFollowup store;
+    class Choice decision;

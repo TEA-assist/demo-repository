@@ -1,0 +1,29 @@
+flowchart LR
+    Delivered[Eligible delivery] --> Ledger[Append-only supplier ledger]
+    Ledger --> Payable[Supplier payable]
+    Ledger --> SupplierShip[Supplier shipping cost]
+    Ledger --> Fee[Platform fee]
+    Ledger --> Reserve[Reserve hold]
+    Ledger --> Recovery[Refund recovery]
+
+    Payable --> Availability[Available after approved hold rules]
+    SupplierShip --> Availability
+    Fee --> Availability
+    Reserve --> Release[Reserve release after delay]
+    Release --> Availability
+    Recovery --> Availability
+    Availability --> Draft[Payout draft]
+    Draft --> Approval[Finance approval]
+    Approval --> Paid[Paid with external reference]
+    Paid --> Statement[Supplier statement and audit trail]
+
+    ReferralConversion[Verified referral conversion] --> Commission[Referral commission ledger]
+    LeadConversion[Confirmed assisted-lead conversion] --> Commission
+    Commission --> CommissionApproval[Commission confirmation and adjustment]
+
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef finance fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Delivered,Ledger,Statement,ReferralConversion,LeadConversion,Commission,CommissionApproval platform;
+    class Payable,SupplierShip,Fee,Reserve,Recovery,Availability,Release,Draft,Paid finance;
+    class Approval decision;

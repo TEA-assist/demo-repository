@@ -1,0 +1,34 @@
+flowchart TD
+    Accepted[Accepted store sub-order] --> Route{Fulfillment route}
+    Route --> Direct[Store Direct]
+    Route --> Warehouse[Haya Warehouse]
+
+    Direct --> Pack[Store packs and dispatches]
+    Pack --> DirectShip[Record carrier and tracking]
+
+    Warehouse --> Inbound[Store sends goods to warehouse]
+    Inbound --> Receive[Receive and inspect quantities]
+    Receive --> Inspection{All units acceptable?}
+    Inspection -->|Yes| PickPack[Pick, pack, and dispatch outbound]
+    Inspection -->|No| Exception[Damage, shortage, or mismatch]
+    Exception --> BuyerDecision[Buyer approves available items or cancels]
+    BuyerDecision --> PickPack
+
+    DirectShip --> Provider{Shipping option}
+    PickPack --> Provider
+    Provider --> Demo[Demo carrier\nSimulated]
+    Provider --> Easyship[Easyship pilot adapter\nAwaiting live verification]
+    Provider --> Reported[EasyPost, Shippo, ShipStation, DHL\nReported Implemented]
+    Demo --> Tracking[Shipment status updates]
+    Easyship --> Tracking
+    Reported --> Tracking
+    Tracking --> Delivered[Delivered or delivery exception]
+
+    classDef store fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px;
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef ops fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Accepted,Direct,DirectShip,Tracking,Delivered platform;
+    class Pack,Warehouse,Inbound,Receive,Exception,PickPack,BuyerDecision ops;
+    class Route,Inspection,Provider decision;
+    class Demo,Easyship,Reported store;

@@ -1,0 +1,31 @@
+flowchart LR
+    Buyer[Buyer] --> Discover[Discover products in Haya]
+    Discover --> Catalog[Connected catalog\nproduct data]
+    Catalog -. does not choose .-> Model{Sales model}
+
+    Model --> CatalogOnly[Catalog Only\nDiscovery, no transaction]
+    Model --> Checkout[Haya Checkout\nBuyer order in Haya]
+    Model --> Referral[Store Referral\nRedirect to store]
+    Model --> Lead[Assisted Lead / Order\nRequest to store]
+
+    Checkout --> Procure[Procurement\nOperator-assisted or verified API]
+    Procure --> Fulfill[Store Direct or Haya Warehouse]
+    Fulfill --> Ship[Shipping and delivery]
+    Ship --> Returns[Returns and refunds]
+    Returns --> Settle[Supplier settlement]
+
+    Referral --> Conversion[Verified merchant conversion]
+    Lead --> LeadConversion[Confirmed store conversion]
+    Conversion --> Commission[Commission ledger]
+    LeadConversion --> Commission
+
+    classDef buyer fill:#ffe9d9,stroke:#b45309,color:#4a2600,stroke-width:2px;
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef store fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px;
+    classDef ops fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Buyer buyer;
+    class Discover,Catalog,Checkout,Referral,Lead,Ship,Returns,Settle,Conversion,LeadConversion,Commission platform;
+    class Procure,Fulfill ops;
+    class CatalogOnly store;
+    class Model decision;

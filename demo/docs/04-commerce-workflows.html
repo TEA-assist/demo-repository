@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Editable visual workflows for Haya commerce, including checkout, fulfillment, returns, settlement, and operational exceptions.">
+  <title>Haya Commerce Visual Workflows</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/css/commerce-workflows.css">
+</head>
+<body class="workflow-page">
+  <main class="workflow-shell">
+    <nav class="workflow-nav" aria-label="Documentation navigation">
+      <a href="../../index.html">Portal</a>
+      <a href="00-full-documentation.html">Master documentation</a>
+      <a href="03-commerce-system.html">Commerce system guide</a>
+      <a href="haya-commerce-implementation-plan.md">Implementation plan</a>
+      <span>Visual workflows</span>
+    </nav>
+
+    <header class="workflow-hero">
+      <div>
+        <p class="workflow-kicker">Product, operations, finance, and engineering</p>
+        <h1>Haya Commerce Visual Workflows</h1>
+        <p class="workflow-summary">Haya Checkout is the primary commerce strategy; referral and assisted workflows remain separate models. This visual map keeps catalog connectivity, sales model, procurement, fulfillment, shipping, returns, and settlement as independent decisions.</p>
+      </div>
+      <dl class="workflow-facts">
+        <div><dt>Diagram sources</dt><dd>10 editable Mermaid files</dd></div>
+        <div><dt>Viewer state</dt><dd data-viewer-status aria-live="polite">Loading Mermaid renderer</dd></div>
+        <div><dt>Source of truth</dt><dd>Current commerce guide and implementation plan</dd></div>
+      </dl>
+    </header>
+
+    <section class="workflow-section" aria-labelledby="status-title">
+      <div class="status-legend">
+        <h2 id="status-title">Status language</h2>
+        <p>These labels distinguish documented behavior from demos, product-owner reports, and real-provider launch readiness. A configuration screen or connector is not proof of a live commercial service.</p>
+        <ul class="status-list" aria-label="Status legend">
+          <li><span class="status-badge status-implemented">Implemented</span></li>
+          <li><span class="status-badge status-simulated">Simulated</span></li>
+          <li><span class="status-badge status-reported">Reported Implemented</span></li>
+          <li><span class="status-badge status-credentials">Awaiting Credentials</span></li>
+          <li><span class="status-badge status-verification">Awaiting Verification</span></li>
+          <li><span class="status-badge status-planned">Planned</span></li>
+          <li><span class="status-badge status-live">Live Verified</span></li>
+        </ul>
+      </div>
+      <div class="workflow-disclosure">
+        <h2>Current launch boundary</h2>
+        <p>Mock payment and the demo carrier support repeatable demonstrations only. Live payment, provider accounts, carrier route validation, payout rails, finance/legal approvals, and store-specific verification remain launch gates. This page does not mark any external commerce provider as Live Verified without explicit evidence.</p>
+      </div>
+    </section>
+
+    <section class="workflow-section" aria-labelledby="diagram-index-title">
+      <h2 id="diagram-index-title">Diagram index</h2>
+      <p>Use the cards for the operational explanation, or open the source to edit the underlying Mermaid definition.</p>
+      <ol class="workflow-toc">
+        <li><a href="#commerce-overview">01. Commerce overview</a></li>
+        <li><a href="#store-integration">02. Store integration</a></li>
+        <li><a href="#inventory-synchronization">03. Inventory synchronization</a></li>
+        <li><a href="#sales-models">04. Sales models</a></li>
+        <li><a href="#checkout-payment">05. Checkout and payment</a></li>
+        <li><a href="#supplier-procurement">06. Supplier procurement</a></li>
+        <li><a href="#fulfillment-shipping">07. Fulfillment and shipping</a></li>
+        <li><a href="#returns-refunds">08. Returns and refunds</a></li>
+        <li><a href="#financial-settlement">09. Financial settlement</a></li>
+        <li><a href="#exception-handling">10. Exception handling</a></li>
+      </ol>
+    </section>
+
+    <section class="workflow-section" aria-labelledby="workflows-title">
+      <h2 id="workflows-title">Commerce workflows</h2>
+      <p>Role colors in flowcharts: buyer is orange, Haya platform is blue, store/supplier is green, operations/finance is purple, and decisions are yellow.</p>
+
+      <article class="workflow-card" id="commerce-overview" data-diagram="diagrams/01-commerce-overview.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">01. Scope and boundaries</p>
+            <h3>Commerce overview</h3>
+            <p class="workflow-card__description">The highest-level view of how discovery can lead to a checkout, referral, or assisted request without collapsing independent business choices.</p>
+          </div>
+          <span class="status-badge status-implemented">Implemented</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Commerce overview controls">
+              <button type="button" data-action="zoom-in">Zoom in</button>
+              <button type="button" data-action="zoom-out">Zoom out</button>
+              <button type="button" data-action="reset">Reset view</button>
+              <button type="button" data-action="fullscreen">Fullscreen</button>
+              <button type="button" data-action="copy-source">Copy source</button>
+              <button type="button" data-action="download-source">Download .mmd</button>
+              <button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/01-commerce-overview.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Read it as</h4>
+            <p>A connected catalog makes products discoverable. It does not make a store checkout-ready or prove an external provider is live.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#exception-handling">Previous: exception handling</a><a href="#store-integration">Next: store integration</a></p>
+      </article>
+
+      <article class="workflow-card" id="store-integration" data-diagram="diagrams/02-store-integration.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">02. Onboarding and readiness</p>
+            <h3>Store integration</h3>
+            <p class="workflow-card__description">Catalog ingestion is reviewed first; each commercial model then has its own requirements before a buyer-facing action is enabled.</p>
+          </div>
+          <span class="status-badge status-implemented">Implemented</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Store integration controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/02-store-integration.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Readiness rule</h4>
+            <p>Keep a store Catalog Only until the selected model has its commercial owner, operating process, and required evidence.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#commerce-overview">Previous: overview</a><a href="#inventory-synchronization">Next: inventory synchronization</a></p>
+      </article>
+
+      <article class="workflow-card" id="inventory-synchronization" data-diagram="diagrams/03-inventory-synchronization.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">03. Data freshness</p>
+            <h3>Inventory synchronization</h3>
+            <p class="workflow-card__description">Store-provided product and inventory signals pass through mapping and review before discovery. Checkout validates eligible details again and snapshots what was agreed.</p>
+          </div>
+          <span class="status-badge status-implemented">Implemented</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Inventory synchronization controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/03-inventory-synchronization.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Important boundary</h4>
+            <p>Catalog API reading is not supplier order writing. The buyer-facing quote and later supplier response remain separate safeguards.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#store-integration">Previous: store integration</a><a href="#sales-models">Next: sales models</a></p>
+      </article>
+
+      <article class="workflow-card" id="sales-models" data-diagram="diagrams/04-sales-models.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">04. Buyer actions</p>
+            <h3>Sales models</h3>
+            <p class="workflow-card__description">A buyer sees one eligible next action: discovery only, checkout in Haya, redirect to a store, or a consented request for store follow-up.</p>
+          </div>
+          <span class="status-badge status-simulated">Mock payment is simulated</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Sales model controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/04-sales-models.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Affiliate qualification</h4>
+            <p><span class="status-badge status-reported">Reported Implemented</span></p>
+            <p>Five affiliate connectors are reported by the product owner, but their identities and callback evidence are not established in this repository. They are not represented as live conversions here.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#inventory-synchronization">Previous: inventory synchronization</a><a href="#checkout-payment">Next: checkout and payment</a></p>
+      </article>
+
+      <article class="workflow-card" id="checkout-payment" data-diagram="diagrams/05-checkout-payment.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">05. Buyer order sequence</p>
+            <h3>Checkout and payment</h3>
+            <p class="workflow-card__description">The sequence keeps server-calculated quotes, store sub-orders, supplier response, and the current demo payment boundary visible.</p>
+          </div>
+          <span class="status-badge status-credentials">Live PSP awaiting selection and credentials</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Checkout and payment controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/05-checkout-payment.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Payment status</h4>
+            <p><span class="status-badge status-simulated">Simulated</span></p>
+            <p>The mock path records a demo lifecycle only. It does not authorize, capture, refund, or reconcile a real payment-provider transaction.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#sales-models">Previous: sales models</a><a href="#supplier-procurement">Next: supplier procurement</a></p>
+      </article>
+
+      <article class="workflow-card" id="supplier-procurement" data-diagram="diagrams/06-supplier-procurement.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">06. Sourcing a checkout order</p>
+            <h3>Supplier procurement</h3>
+            <p class="workflow-card__description">Supplier acceptance controls whether a store sub-order can proceed. An overdue supplier response escalates to operations; it is not silently accepted or rejected.</p>
+          </div>
+          <span class="status-badge status-verification">Verified supplier API is store-specific</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Supplier procurement controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/06-supplier-procurement.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Operating default</h4>
+            <p>Operator-assisted procurement is available. Use API procurement only when the source store has approved and verified its order-write capability.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#checkout-payment">Previous: checkout and payment</a><a href="#fulfillment-shipping">Next: fulfillment and shipping</a></p>
+      </article>
+
+      <article class="workflow-card" id="fulfillment-shipping" data-diagram="diagrams/07-fulfillment-shipping.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">07. Physical movement</p>
+            <h3>Fulfillment and shipping</h3>
+            <p class="workflow-card__description">Store Direct and Haya Warehouse are distinct physical routes. Carrier configuration is shown separately from a real, verified shipping service.</p>
+          </div>
+          <span class="status-badge status-verification">Carrier verification remains a launch gate</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Fulfillment and shipping controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/07-fulfillment-shipping.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Provider qualifications</h4>
+            <p><span class="status-badge status-simulated">Demo carrier</span> produces watermarked labels and fictional tracking only.</p>
+            <p><span class="status-badge status-verification">Easyship pilot</span> needs verified account, route, rate, label, and webhook testing.</p>
+            <p><span class="status-badge status-reported">EasyPost, Shippo, ShipStation, and DHL</span> are product-owner reports, not Live Verified provider claims. DHL credential/customer-code behavior is not asserted.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#supplier-procurement">Previous: supplier procurement</a><a href="#returns-refunds">Next: returns and refunds</a></p>
+      </article>
+
+      <article class="workflow-card" id="returns-refunds" data-diagram="diagrams/08-returns-refunds.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">08. Post-delivery resolution</p>
+            <h3>Returns and refunds</h3>
+            <p class="workflow-card__description">Returns follow the policy snapshot that applied to the order. The financial and document trail stays linked to the resolution.</p>
+          </div>
+          <span class="status-badge status-implemented">Implemented</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Returns and refunds controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/08-returns-refunds.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Financial safeguard</h4>
+            <p>The system limits a refund to the remaining payment balance and keeps supplier recovery as its own ledger action rather than rewriting history.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#fulfillment-shipping">Previous: fulfillment and shipping</a><a href="#financial-settlement">Next: financial settlement</a></p>
+      </article>
+
+      <article class="workflow-card" id="financial-settlement" data-diagram="diagrams/09-financial-settlement.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">09. Financial records</p>
+            <h3>Financial settlement</h3>
+            <p class="workflow-card__description">Supplier settlement, referral commission, and assisted-lead commission use distinct append-only records so every adjustment remains explainable.</p>
+          </div>
+          <span class="status-badge status-credentials">Payout rails and policy approval pending</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Financial settlement controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/09-financial-settlement.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Do not net models together</h4>
+            <p>Checkout creates supplier settlement records. Referral and assisted-lead conversion create commission records. They have different evidence and commercial owners.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#returns-refunds">Previous: returns and refunds</a><a href="#exception-handling">Next: exception handling</a></p>
+      </article>
+
+      <article class="workflow-card" id="exception-handling" data-diagram="diagrams/10-exception-handling.mmd">
+        <div class="workflow-card__header">
+          <div>
+            <p class="workflow-card__eyebrow">10. Buyer-safe operations</p>
+            <h3>Exception handling</h3>
+            <p class="workflow-card__description">Operational problems stop or reroute the affected action with a visible buyer decision and audit record; Haya does not invent a price, shipment, or provider confirmation.</p>
+          </div>
+          <span class="status-badge status-implemented">Implemented safeguards</span>
+        </div>
+        <div class="workflow-card__body">
+          <div class="diagram-panel">
+            <div class="diagram-toolbar" aria-label="Exception handling controls">
+              <button type="button" data-action="zoom-in">Zoom in</button><button type="button" data-action="zoom-out">Zoom out</button><button type="button" data-action="reset">Reset view</button><button type="button" data-action="fullscreen">Fullscreen</button><button type="button" data-action="copy-source">Copy source</button><button type="button" data-action="download-source">Download .mmd</button><button type="button" data-action="download-svg">Download SVG</button>
+            </div>
+            <div class="diagram-viewport" data-render-target tabindex="0"><p class="diagram-loading">Loading diagram source...</p></div>
+            <details class="diagram-source"><summary>View Mermaid source</summary><pre data-source-preview></pre></details>
+            <p class="source-actions"><a data-source-link href="diagrams/10-exception-handling.mmd">Open editable source</a></p>
+          </div>
+          <aside class="workflow-notes">
+            <h4>Escalate, do not guess</h4>
+            <p>Missing credentials, unverified routes, stale quotes, and physical discrepancies are readiness signals. They require evidence or buyer choice before the order proceeds.</p>
+          </aside>
+        </div>
+        <p class="workflow-pager"><a href="#financial-settlement">Previous: financial settlement</a><a href="#commerce-overview">Next: commerce overview</a></p>
+      </article>
+    </section>
+
+    <section class="workflow-section" aria-labelledby="sources-title">
+      <h2 id="sources-title">Source and strategy context</h2>
+      <div class="workflow-disclosure">
+        <p>The detailed <a href="03-commerce-system.html">Haya Commerce System Guide</a> describes the business rules. The <a href="haya-commerce-implementation-plan.md">implementation plan</a> is the technical source for APIs, milestones, and launch requirements. The older <a href="../presentation/05-investor-business-model.html">investor business-model presentation</a> retains referral-first and no-inventory financial scenarios; those hypothetical scenarios are separate from this current Haya Checkout and warehouse-capability workflow view.</p>
+      </div>
+    </section>
+
+    <footer class="workflow-footer">Haya Commerce Visual Workflows | Mermaid 12.4.0 is loaded from a pinned CDN URL. For local preview, serve this repository over HTTP rather than opening this page through <code>file://</code>.</footer>
+  </main>
+  <script type="module" src="../assets/js/commerce-workflows.js"></script>
+</body>
+</html>

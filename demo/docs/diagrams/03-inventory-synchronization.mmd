@@ -1,0 +1,26 @@
+flowchart LR
+    Source[Store catalog source] --> Connector[Catalog connector]
+    Connector --> Normalize[Map product, variant, price, stock, weight, image]
+    Normalize --> Review[Store review and active status]
+    Review --> Catalog[Haya discovery catalog]
+    Catalog --> BuyerView[Buyer product view]
+
+    Connector --> Schedule[Configured sync schedule]
+    Schedule --> Connector
+    Connector --> Issue{Source data issue?}
+    Issue -->|No| Normalize
+    Issue -->|Yes| ReviewQueue[Review freshness and correction]
+    ReviewQueue --> Connector
+
+    BuyerView --> Quote[Checkout quote validates current eligible details]
+    Quote --> Snapshot[Order snapshot preserves agreed product and price]
+    Snapshot --> Supplier[Supplier response confirms supply]
+
+    classDef store fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px;
+    classDef platform fill:#dbeafe,stroke:#1d4ed8,color:#102a5e,stroke-width:2px;
+    classDef ops fill:#f3e8ff,stroke:#7e22ce,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:2px;
+    class Source store;
+    class Connector,Normalize,Catalog,BuyerView,Quote,Snapshot platform;
+    class Review,Schedule,ReviewQueue,Supplier ops;
+    class Issue decision;

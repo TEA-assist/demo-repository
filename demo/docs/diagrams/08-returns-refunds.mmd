@@ -1,0 +1,23 @@
+stateDiagram-v2
+    [*] --> Delivered
+    Delivered --> ReturnRequested: Active matching policy and eligible window
+    ReturnRequested --> Approved: Approval not required or approved
+    ReturnRequested --> Rejected: Policy or inspection decision
+    Approved --> InTransit: Buyer sends return
+    InTransit --> Received: Store or warehouse receives item
+    Received --> Inspected
+    Inspected --> Refunded: Eligible refund calculation
+    Inspected --> Replaced: Exchange resolution where supported
+    Inspected --> Declined: Item does not meet policy
+    Refunded --> CreditNote: Issue linked credit note
+    CreditNote --> SettlementRecovery: Record eligible supplier recovery separately
+    Replaced --> Closed
+    Declined --> Closed
+    SettlementRecovery --> Closed
+    Rejected --> Closed
+    Closed --> [*]
+
+    note right of Refunded
+      Refund is capped at the remaining
+      payment balance and uses order snapshots.
+    end note
